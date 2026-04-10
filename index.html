@@ -8,16 +8,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="CER Ouezzinville Nord - Temple Philadelphie — Application officielle de l'église">
 <title>CER Ouezzinville Nord - Temple Philadelphie</title>
-
-<!-- PWA Manifest -->
 <link rel="manifest" href="manifest.json">
 <link rel="shortcut icon" href="./logo-site.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="bg-animation"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
-
 <!-- LOADER -->
 <div id="loader">
   <div class="loader-logo">✝</div>
@@ -25,9 +20,7 @@
   <div class="loader-church-sub">Application officielle</div>
   <div class="loader-spinner"></div>
 </div>
-
 <div class="toast-container" id="toastContainer"></div>
-
 <!-- NAVBAR -->
 <nav class="navbar">
   <div class="navbar-brand">
@@ -52,8 +45,7 @@
     <button class="nav-btn" onclick="toggleAuthModal()" id="profileBtn">👤</button>
   </div>
 </nav>
-
-<!-- BOTTOM NAV (8 items) -->
+<!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="bottom-nav-item active" data-page="home" onclick="navigate('home')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
   <button class="bottom-nav-item" data-page="bible" onclick="navigate('bible')"><span class="icon">📖</span><span data-i18n="navBible">Bible</span></button>
@@ -66,406 +58,507 @@
   <button class="bottom-nav-item" data-page="chat" onclick="navigate('chat')"><span class="icon">💬</span><span data-i18n="navChat">Chat</span></button>
   <button class="bottom-nav-item" data-page="about" onclick="navigate('about')"><span class="icon">ℹ️</span><span data-i18n="navAbout">À propos</span></button>
   <button class="bottom-nav-item" data-page="contact" onclick="navigate('contact')"><span class="icon">📞</span><span data-i18n="navContact">Contact</span></button>
+  <button class="bottom-nav-item hidden" data-page="dashboard" id="navDashboard" onclick="navigate('dashboard')"><span class="icon">👑</span><span>Dashboard</span></button>
 </nav>
-
-<!-- ====================================
-     MAIN CONTENT
-     ==================================== -->
 <main class="main-content">
 
-  <!-- ========== HOME ========== -->
-  <div class="page active" id="page-home">
-    <div class="welcome-hero">
-      <div class="church-logo-large">✝</div>
-      <h1>CER Ouezzinville Nord</h1>
-      <div class="church-full-name" data-i18n="templePhiladelphie">Temple Philadelphie</div>
-      <div class="church-verse">
-        <span data-i18n="philadelphiaVerse">« Je connais tes œuvres. Voici, j'ai mis devant toi une porte ouverte, que personne ne peut fermer, parce que tu as peu de puissance, et que tu as gardé ma parole. »</span>
-        <span class="cv-ref">Apocalypse 3:8</span>
-      </div>
-    </div>
-    <div class="online-bar">
-      <div id="homeLiveIndicator" class="hidden live-indicator-badge" onclick="navigate('live')">
-        <span class="online-dot live-indicator-dot"></span>
-        <span style="color:var(--danger);font-weight:700">LIVE EN COURS</span>
-      </div>
-      <span class="online-dot"></span><span>0</span> <span data-i18n="onlineNow">en ligne</span>
-    </div>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-icon">📺</div><div class="stat-value" id="statLives">0</div><div class="stat-label" data-i18n="statLives">Lives</div></div>
-      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="statMembers">0</div><div class="stat-label" data-i18n="statMembers">Membres</div></div>
-      <div class="stat-card"><div class="stat-icon">🎬</div><div class="stat-value" id="statSermons">0</div><div class="stat-label" data-i18n="statSermons">Prédications</div></div>
-      <div class="stat-card"><div class="stat-icon">🧘</div><div class="stat-value" id="statMeditations">0</div><div class="stat-label" data-i18n="statMeditations">Méditations</div></div>
-    </div>
-    <div class="section-header"><h2 data-i18n="quickActions">Actions rapides</h2></div>
-    <div class="quick-actions">
-      <div class="quick-action-btn" onclick="navigate('bible')"><span class="qa-icon">📖</span><span data-i18n="readBible">Bible</span></div>
-      <div class="quick-action-btn" onclick="navigate('meditation')"><span class="qa-icon">🧘</span><span data-i18n="meditate">Méditer</span></div>
-      <div class="quick-action-btn" onclick="navigate('live')"><span class="qa-icon">🎥</span><span data-i18n="watchLive">Lives</span></div>
-      <div class="quick-action-btn" onclick="navigate('sermons')"><span class="qa-icon">🎬</span><span data-i18n="watchSermons">Prédica.</span></div>
-      <div class="quick-action-btn" onclick="navigate('gallery')"><span class="qa-icon">📸</span><span data-i18n="viewGallery">Galerie</span></div>
-      <div class="quick-action-btn" onclick="startQuickMed()"><span class="qa-icon">🌿</span><span data-i18n="quickMeditation">Méditation rapide</span></div>
-    </div>
-    <div class="glass-card" style="margin-top:16px">
-      <div class="card-header"><div class="card-title">📅 <span data-i18n="upcomingEvents">Prochains cultes</span></div></div>
-      <div id="homeEvents"><div class="empty-state"><div class="empty-icon">📅</div><p data-i18n="noEvents">Aucun événement programmé</p></div></div>
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="welcome-hero">
+    <div class="church-logo-large">✝</div>
+    <h1>CER Ouezzinville Nord</h1>
+    <div class="church-full-name" data-i18n="templePhiladelphie">Temple Philadelphie</div>
+    <div class="church-verse">
+      <span data-i18n="philadelphiaVerse">« Je connais tes œuvres. Voici, j'ai mis devant toi une porte ouverte... »</span>
+      <span class="cv-ref">Apocalypse 3:8</span>
     </div>
   </div>
-
-  <!-- ========== BIBLE ========== -->
-  <div class="page" id="page-bible">
-    <div class="section-header"><h2>📖 <span data-i18n="bibleTitle">La Bible en Français</span></h2></div>
-    <div class="glass-card ai-bible-card">
-      <div class="card-title ai-bible-title">🤖 Assistant IA Biblique</div>
-      <p class="ai-bible-subtitle">Posez une question ou demandez un thème (ex: "versets sur l'amour")</p>
-      <div class="bible-audio-controls-container">
-        <input class="form-input" type="text" id="aiBibleQuery" placeholder="Comment trouver la paix ?">
-        <button class="btn btn-gold btn-sm" onclick="askAIBible()">Demander</button>
-      </div>
-      <div id="aiBibleResponse" class="hidden ai-bible-response"></div>
+  <div class="online-bar">
+    <div id="homeLiveIndicator" class="hidden live-indicator-badge" onclick="navigate('live')">
+      <span class="online-dot live-indicator-dot"></span>
+      <span style="color:var(--danger);font-weight:700">LIVE EN COURS</span>
     </div>
+    <span class="online-dot"></span><span id="onlineCount">0</span>&nbsp;<span data-i18n="onlineNow">en ligne</span>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">📺</div><div class="stat-value" id="statLives">0</div><div class="stat-label" data-i18n="statLives">Lives</div></div>
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="statMembers">0</div><div class="stat-label" data-i18n="statMembers">Membres</div></div>
+    <div class="stat-card"><div class="stat-icon">🎬</div><div class="stat-value" id="statSermons">0</div><div class="stat-label" data-i18n="statSermons">Prédications</div></div>
+    <div class="stat-card"><div class="stat-icon">🧘</div><div class="stat-value" id="statMeditations">0</div><div class="stat-label" data-i18n="statMeditations">Méditations</div></div>
+  </div>
+  <div class="section-header"><h2 data-i18n="quickActions">Actions rapides</h2></div>
+  <div class="quick-actions">
+    <div class="quick-action-btn" onclick="navigate('bible')"><span class="qa-icon">📖</span><span data-i18n="readBible">Bible</span></div>
+    <div class="quick-action-btn" onclick="navigate('meditation')"><span class="qa-icon">🧘</span><span data-i18n="meditate">Méditer</span></div>
+    <div class="quick-action-btn" onclick="navigate('live')"><span class="qa-icon">🎥</span><span data-i18n="watchLive">Lives</span></div>
+    <div class="quick-action-btn" onclick="navigate('sermons')"><span class="qa-icon">🎬</span><span data-i18n="watchSermons">Prédica.</span></div>
+    <div class="quick-action-btn" onclick="navigate('gallery')"><span class="qa-icon">📸</span><span data-i18n="viewGallery">Galerie</span></div>
+    <div class="quick-action-btn" onclick="startQuickMed()"><span class="qa-icon">🌿</span><span data-i18n="quickMeditation">Méditation rapide</span></div>
+  </div>
+  <div class="glass-card" style="margin-top:16px">
+    <div class="card-header"><div class="card-title">📅 <span data-i18n="upcomingEvents">Prochains cultes</span></div></div>
+    <div id="homeEvents">
+      <div class="calendar-event"><div class="event-date"><div class="event-day">🙏</div></div><div class="event-info"><h4>Dimanche — Culte d'adoration</h4><p>8h00 – 11h30</p></div></div>
+      <div class="calendar-event"><div class="event-date"><div class="event-day">🕯</div></div><div class="event-info"><h4>Mercredi — Prière</h4><p>17h30 – 18h30</p></div></div>
+      <div class="calendar-event"><div class="event-date"><div class="event-day">🌙</div></div><div class="event-info"><h4>Vendredi — Veillée</h4><p>21h00 – 23h00</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- BIBLE CORRIGEE -->
+<div class="page" id="page-bible">
+  <div class="section-header"><h2>📖 <span data-i18n="bibleTitle">La Bible</span></h2></div>
+  <div class="glass-card ai-bible-card">
+    <div class="card-title ai-bible-title">🤖 Assistant IA Biblique</div>
+    <p class="ai-bible-subtitle">Posez une question (ex: "versets sur l'amour", "Comment avoir la paix ?")</p>
+    <div class="bible-audio-controls-container">
+      <input class="form-input" type="text" id="aiBibleQuery" placeholder="Comment trouver la paix ?">
+      <button class="btn btn-gold btn-sm" onclick="askAIBible()">Demander</button>
+    </div>
+    <div id="aiBibleResponse" class="hidden ai-bible-response"></div>
+  </div>
+  <div class="glass-card">
     <div class="bible-controls">
-      <div class="form-group"><label class="form-label" data-i18n="book">Livre</label>
+      <div class="form-group">
+        <label class="form-label" data-i18n="book">Livre</label>
         <select class="form-select" id="bibleBook" onchange="updateChapters();loadBible()">
-          <option value="Genesis">Genèse</option><option value="Exodus">Exode</option><option value="Leviticus">Lévitique</option>
-          <option value="Numbers">Nombres</option><option value="Deuteronomy">Deutéronome</option><option value="Joshua">Josué</option>
-          <option value="Judges">Juges</option><option value="Ruth">Ruth</option><option value="1 Samuel">1 Samuel</option>
-          <option value="2 Samuel">2 Samuel</option><option value="1 Kings">1 Rois</option><option value="2 Kings">2 Rois</option>
-          <option value="Psalms">Psaumes</option><option value="Proverbs">Proverbes</option><option value="Isaiah">Ésaïe</option>
-          <option value="Jeremiah">Jérémie</option><option value="Matthew">Matthieu</option><option value="Mark">Marc</option>
-          <option value="Luke">Luc</option><option value="John" selected>Jean</option><option value="Acts">Actes</option>
-          <option value="Romans">Romains</option><option value="1 Corinthians">1 Corinthiens</option><option value="Galatians">Galates</option>
-          <option value="Ephesians">Éphésiens</option><option value="Philippians">Philippiens</option><option value="Revelation">Apocalypse</option>
+          <optgroup label="Ancien Testament">
+            <option value="Genesis">Genèse</option><option value="Exodus">Exode</option>
+            <option value="Leviticus">Lévitique</option><option value="Numbers">Nombres</option>
+            <option value="Deuteronomy">Deutéronome</option><option value="Joshua">Josué</option>
+            <option value="Judges">Juges</option><option value="Ruth">Ruth</option>
+            <option value="1 Samuel">1 Samuel</option><option value="2 Samuel">2 Samuel</option>
+            <option value="1 Kings">1 Rois</option><option value="2 Kings">2 Rois</option>
+            <option value="1 Chronicles">1 Chroniques</option><option value="2 Chronicles">2 Chroniques</option>
+            <option value="Ezra">Esdras</option><option value="Nehemiah">Néhémie</option>
+            <option value="Esther">Esther</option><option value="Job">Job</option>
+            <option value="Psalms">Psaumes</option><option value="Proverbs">Proverbes</option>
+            <option value="Ecclesiastes">Ecclésiaste</option><option value="Song of Solomon">Cantique</option>
+            <option value="Isaiah">Ésaïe</option><option value="Jeremiah">Jérémie</option>
+            <option value="Lamentations">Lamentations</option><option value="Ezekiel">Ézéchiel</option>
+            <option value="Daniel">Daniel</option><option value="Hosea">Osée</option>
+            <option value="Joel">Joël</option><option value="Amos">Amos</option>
+            <option value="Obadiah">Abdias</option><option value="Jonah">Jonas</option>
+            <option value="Micah">Michée</option><option value="Nahum">Nahum</option>
+            <option value="Habakkuk">Habacuc</option><option value="Zephaniah">Sophonie</option>
+            <option value="Haggai">Aggée</option><option value="Zechariah">Zacharie</option>
+            <option value="Malachi">Malachie</option>
+          </optgroup>
+          <optgroup label="Nouveau Testament">
+            <option value="Matthew">Matthieu</option><option value="Mark">Marc</option>
+            <option value="Luke">Luc</option><option value="John" selected>Jean</option>
+            <option value="Acts">Actes</option><option value="Romans">Romains</option>
+            <option value="1 Corinthians">1 Corinthiens</option><option value="2 Corinthians">2 Corinthiens</option>
+            <option value="Galatians">Galates</option><option value="Ephesians">Éphésiens</option>
+            <option value="Philippians">Philippiens</option><option value="Colossians">Colossiens</option>
+            <option value="1 Thessalonians">1 Thessaloniciens</option><option value="2 Thessalonians">2 Thessaloniciens</option>
+            <option value="1 Timothy">1 Timothée</option><option value="2 Timothy">2 Timothée</option>
+            <option value="Titus">Tite</option><option value="Philemon">Philémon</option>
+            <option value="Hebrews">Hébreux</option><option value="James">Jacques</option>
+            <option value="1 Peter">1 Pierre</option><option value="2 Peter">2 Pierre</option>
+            <option value="1 John">1 Jean</option><option value="2 John">2 Jean</option>
+            <option value="3 John">3 Jean</option><option value="Jude">Jude</option>
+            <option value="Revelation">Apocalypse</option>
+          </optgroup>
         </select>
       </div>
-      <div class="form-group"><label class="form-label" data-i18n="chapter">Chapitre</label><select class="form-select" id="bibleChapter" onchange="loadBible()"></select></div>
-      <div class="form-group bible-search"><label class="form-label" data-i18n="search">Recherche</label><input class="form-input" type="text" id="bibleSearch" placeholder="Rechercher..." onkeyup="searchBible()"></div>
-    </div>
-    <div class="glass-card">
-      <div class="bible-audio-controls">
-        <button class="btn btn-gold btn-sm" onclick="speakBible()">🔊 <span data-i18n="listen">Écouter</span></button>
-        <button class="btn btn-secondary btn-sm" onclick="pauseSpeech()">⏸</button>
-        <button class="btn btn-secondary btn-sm" onclick="stopSpeech()">⏹</button>
-        <div class="speed-control"><span>Vitesse:</span><select class="form-select bible-speech-speed" id="speechSpeed"><option value="0.5">0.5x</option><option value="0.75">0.75x</option><option value="1" selected>1x</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option></select></div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="chapter">Chapitre</label>
+        <select class="form-select" id="bibleChapter" onchange="loadBible()"></select>
       </div>
     </div>
-    <div class="bible-content" id="bibleContent"><div class="empty-state"><div class="loader-spinner" style="margin:0 auto 10px"></div><p>Chargement...</p></div></div>
-    <div class="tabs" style="margin-top:14px">
-      <button class="tab active" onclick="showBibleTab('favorites',this)">⭐ Favoris</button>
-      <button class="tab" onclick="showBibleTab('history',this)">📜 Historique</button>
+    <div class="form-group">
+      <label class="form-label" data-i18n="search">Recherche dans le chapitre</label>
+      <input class="form-input" type="text" id="bibleSearch" placeholder="Mot-clé..." oninput="searchBible()">
     </div>
-    <div class="tab-content active" id="bible-tab-favorites"><div id="bibleFavorites"><div class="empty-state"><div class="empty-icon">⭐</div><p data-i18n="noFavorites">Aucun favori</p></div></div></div>
-    <div class="tab-content" id="bible-tab-history"><div id="bibleHistory"></div></div>
-  </div>
-
-  <!-- ========== MEDITATION ========== -->
-  <div class="page" id="page-meditation">
-    <div class="meditation-hero">
-      <h2 data-i18n="meditationTitle">🧘 Méditation & Prière</h2>
-      <p>Temple Philadelphie — <span data-i18n="meditationSubtitle">Trouvez la paix dans Sa présence</span></p>
-    </div>
-
-    <div class="daily-verse-card" id="dailyVerseCard">
-      <div class="dv-icon">✨</div>
-      <div class="dv-text" id="dailyVerseText">"..."</div>
-      <div class="dv-ref" id="dailyVerseRef"></div>
-      <button class="btn btn-meditation btn-sm" style="margin-top:10px" onclick="meditateOnVerse()" data-i18n="meditateVerse">Méditer ce verset</button>
-    </div>
-
-    <div class="session-info">
-      <div class="session-stat"><div class="ss-value" id="totalMedTime">0</div><div class="ss-label" data-i18n="totalMinutes">min. total</div></div>
-      <div class="session-stat"><div class="ss-value" id="totalMedSessions">0</div><div class="ss-label" data-i18n="sessions">sessions</div></div>
-      <div class="session-stat"><div class="ss-value" id="medStreak">0</div><div class="ss-label" data-i18n="streak">jours</div></div>
-    </div>
-
-    <div class="section-header"><h2 data-i18n="choosePractice">Pratique</h2></div>
-    <div class="meditation-modes">
-      <div class="meditation-mode active" onclick="selectMedMode('breathing',this)"><div class="mode-icon">🌬️</div><div class="mode-name" data-i18n="breathingMode">Respiration</div><div class="mode-desc" data-i18n="breathingDesc">Inspirez, expirez</div></div>
-      <div class="meditation-mode" onclick="selectMedMode('prayer',this)"><div class="mode-icon">🙏</div><div class="mode-name" data-i18n="prayerMode">Prière</div><div class="mode-desc" data-i18n="prayerDesc">Recueillement</div></div>
-      <div class="meditation-mode" onclick="selectMedMode('scripture',this)"><div class="mode-icon">📖</div><div class="mode-name" data-i18n="scriptureMode">Lectio Divina</div><div class="mode-desc" data-i18n="scriptureDesc">Écritures</div></div>
-      <div class="meditation-mode" onclick="selectMedMode('gratitude',this)"><div class="mode-icon">💛</div><div class="mode-name" data-i18n="gratitudeMode">Gratitude</div><div class="mode-desc" data-i18n="gratitudeDesc">Louange</div></div>
-    </div>
-
-    <div class="glass-card">
-      <div class="card-title" style="margin-bottom:10px">⏱ <span data-i18n="duration">Durée</span></div>
-      <div class="meditation-duration-container">
-        <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(3,this)">3 min</button>
-        <button class="btn btn-meditation btn-sm dur-btn active" onclick="setDur(5,this)">5 min</button>
-        <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(10,this)">10 min</button>
-        <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(15,this)">15 min</button>
-        <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(20,this)">20 min</button>
-        <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(30,this)">30 min</button>
+    <div class="bible-audio-controls" style="margin-top:10px">
+      <button class="btn btn-gold btn-sm" onclick="speakBible()">🔊 <span data-i18n="listen">Écouter</span></button>
+      <button class="btn btn-secondary btn-sm" onclick="pauseSpeech()">⏸</button>
+      <button class="btn btn-secondary btn-sm" onclick="stopSpeech()">⏹</button>
+      <div class="speed-control">
+        <span style="font-size:11px">Vitesse:</span>
+        <select class="form-select bible-speech-speed" id="speechSpeed">
+          <option value="0.5">0.5x</option><option value="0.75">0.75x</option>
+          <option value="1" selected>1x</option><option value="1.25">1.25x</option>
+          <option value="1.5">1.5x</option>
+        </select>
       </div>
-    </div>
-
-    <div class="glass-card">
-      <div class="card-title" style="margin-bottom:10px">🎵 <span data-i18n="ambientSound">Ambiance</span></div>
-      <div class="ambient-grid">
-        <div class="ambient-btn" onclick="toggleAmbient('silence',this)"><div class="amb-icon">🤫</div><span data-i18n="silence">Silence</span></div>
-        <div class="ambient-btn" onclick="toggleAmbient('rain',this)"><div class="amb-icon">🌧️</div><span data-i18n="rain">Pluie</span></div>
-        <div class="ambient-btn" onclick="toggleAmbient('ocean',this)"><div class="amb-icon">🌊</div><span data-i18n="ocean">Océan</span></div>
-        <div class="ambient-btn" onclick="toggleAmbient('forest',this)"><div class="amb-icon">🌲</div><span data-i18n="forest">Forêt</span></div>
-        <div class="ambient-btn" onclick="toggleAmbient('fire',this)"><div class="amb-icon">🔥</div><span data-i18n="fireplace">Feu</span></div>
-        <div class="ambient-btn" onclick="toggleAmbient('birds',this)"><div class="amb-icon">🐦</div><span data-i18n="birds">Oiseaux</span></div>
-      </div>
-      <div class="volume-control"><span>🔈</span><input type="range" min="0" max="100" value="50" id="ambVol" oninput="setAmbVol(this.value)"><span>🔊</span></div>
-    </div>
-
-    <!-- Breathing Exercise -->
-    <div class="glass-card" id="medActiveArea">
-      <div class="breathing-container" id="breathingArea">
-        <div class="breathing-phase" id="breathPhase" data-i18n="readyStart">Prêt à commencer</div>
-        <div class="breathing-circle-wrapper">
-          <div class="breathing-ring"></div><div class="breathing-ring"></div>
-          <div class="breathing-circle" id="breathCircle"><span id="breathInstr" data-i18n="pressStart">Appuyez<br>Démarrer</span></div>
-        </div>
-        <div class="breathing-timer" id="medTimer">5:00</div>
-        <div class="breathing-controls">
-          <button class="btn btn-meditation" onclick="startMed()" id="btnStartMed">▶️ <span data-i18n="start">Démarrer</span></button>
-          <button class="btn btn-secondary hidden" onclick="pauseMed()" id="btnPauseMed">⏸</button>
-          <button class="btn btn-danger btn-sm hidden" onclick="stopMed()" id="btnStopMed">⏹</button>
-        </div>
-      </div>
-      <div class="hidden" id="scriptureArea">
-        <div style="text-align:center;padding:16px">
-          <h3 style="color:var(--meditation-light)" data-i18n="lectioDivina">Lectio Divina</h3>
-          <p style="font-size:12px;color:var(--text-secondary);margin:6px 0" data-i18n="lectioDesc">Lisez lentement, laissez le texte vous parler</p>
-          <div class="daily-verse-card" style="margin:12px 0"><div class="dv-text" id="scriptureText">"..."</div><div class="dv-ref" id="scriptureRef"></div></div>
-          <div class="breathing-timer" id="scriptureTimer">5:00</div>
-          <div class="breathing-controls" style="margin-top:12px">
-            <button class="btn btn-meditation" onclick="startMed()" id="btnStartS">▶️</button>
-            <button class="btn btn-secondary hidden" onclick="pauseMed()" id="btnPauseS">⏸</button>
-            <button class="btn btn-danger btn-sm hidden" onclick="stopMed()" id="btnStopS">⏹</button>
-          </div>
-        </div>
-      </div>
-      <div class="hidden" id="gratitudeArea">
-        <div style="text-align:center;padding:16px">
-          <h3 style="color:var(--meditation-light)">💛 <span data-i18n="gratitudeTitle">Gratitude</span></h3>
-          <p style="font-size:12px;color:var(--text-secondary);margin:6px 0 14px" data-i18n="gratitudeInst">3 sujets de reconnaissance</p>
-          <div class="form-group"><input class="form-input" id="grat1" placeholder="1. Je suis reconnaissant pour..." maxlength="200"></div>
-          <div class="form-group"><input class="form-input" id="grat2" placeholder="2. Je suis reconnaissant pour..." maxlength="200"></div>
-          <div class="form-group"><input class="form-input" id="grat3" placeholder="3. Je suis reconnaissant pour..." maxlength="200"></div>
-          <div class="breathing-timer" id="gratTimer">5:00</div>
-          <div class="breathing-controls" style="margin-top:12px">
-            <button class="btn btn-meditation" onclick="startMed()" id="btnStartG">▶️</button>
-            <button class="btn btn-secondary hidden" onclick="pauseMed()" id="btnPauseG">⏸</button>
-            <button class="btn btn-danger btn-sm hidden" onclick="stopMed()" id="btnStopG">⏹</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="glass-card">
-      <div class="card-header"><div class="card-title">📓 <span data-i18n="journal">Journal</span></div></div>
-      <div class="form-group"><textarea class="form-textarea meditation-journal-textarea" id="medJournal" placeholder="Réflexions, prières..."></textarea></div>
-      <button class="btn btn-meditation btn-sm btn-block" onclick="saveJournal()">💾 <span data-i18n="saveEntry">Sauvegarder</span></button>
-      <div id="journalEntries" class="meditation-journal-history"></div>
-    </div>
-
-    <div class="glass-card">
-      <div class="card-header"><div class="card-title">📊 <span data-i18n="medHistory">Historique</span></div></div>
-      <div id="medHistory"></div>
     </div>
   </div>
+  <div class="bible-content" id="bibleContent">
+    <div class="empty-state"><div class="loader-spinner" style="margin:0 auto 10px"></div><p>Chargement...</p></div>
+  </div>
+  <div class="tabs" style="margin-top:14px">
+    <button class="tab active" onclick="showBibleTab('favorites',this)">⭐ Favoris</button>
+    <button class="tab" onclick="showBibleTab('history',this)">📜 Historique</button>
+  </div>
+  <div class="tab-content active" id="bible-tab-favorites">
+    <div id="bibleFavorites"><div class="empty-state"><div class="empty-icon">⭐</div><p data-i18n="noFavorites">Aucun favori</p></div></div>
+  </div>
+  <div class="tab-content" id="bible-tab-history"><div id="bibleHistory"></div></div>
+</div>
 
-  <!-- ========== LIVE ========== -->
-  <div class="page" id="page-live">
-    <div class="section-header"><h2>🎥 <span data-i18n="liveTitle">Live – Philadelphie</span></h2></div>
-    
-    <!-- ADMIN CONTROLS (Hidden for simple users) -->
-    <div id="liveAdminControls" class="hidden">
+<!-- MEDITATION -->
+<div class="page" id="page-meditation">
+  <div class="meditation-hero">
+    <h2 data-i18n="meditationTitle">🧘 Méditation & Prière</h2>
+    <p>Temple Philadelphie — <span data-i18n="meditationSubtitle">Trouvez la paix dans Sa présence</span></p>
+  </div>
+  <div class="daily-verse-card" id="dailyVerseCard">
+    <div class="dv-icon">✨</div>
+    <div class="dv-text" id="dailyVerseText">"..."</div>
+    <div class="dv-ref" id="dailyVerseRef"></div>
+    <button class="btn btn-meditation btn-sm" style="margin-top:10px" onclick="meditateOnVerse()" data-i18n="meditateVerse">Méditer ce verset</button>
+  </div>
+  <div class="session-info">
+    <div class="session-stat"><div class="ss-value" id="totalMedTime">0</div><div class="ss-label" data-i18n="totalMinutes">min. total</div></div>
+    <div class="session-stat"><div class="ss-value" id="totalMedSessions">0</div><div class="ss-label" data-i18n="sessions">sessions</div></div>
+    <div class="session-stat"><div class="ss-value" id="medStreak">0</div><div class="ss-label" data-i18n="streak">jours</div></div>
+  </div>
+  <div class="section-header"><h2 data-i18n="choosePractice">Pratique</h2></div>
+  <div class="meditation-modes">
+    <div class="meditation-mode active" onclick="selectMedMode('breathing',this)"><div class="mode-icon">🌬️</div><div class="mode-name" data-i18n="breathingMode">Respiration</div><div class="mode-desc" data-i18n="breathingDesc">Inspirez, expirez</div></div>
+    <div class="meditation-mode" onclick="selectMedMode('prayer',this)"><div class="mode-icon">🙏</div><div class="mode-name" data-i18n="prayerMode">Prière</div><div class="mode-desc" data-i18n="prayerDesc">Recueillement</div></div>
+    <div class="meditation-mode" onclick="selectMedMode('scripture',this)"><div class="mode-icon">📖</div><div class="mode-name" data-i18n="scriptureMode">Lectio Divina</div><div class="mode-desc" data-i18n="scriptureDesc">Écritures</div></div>
+    <div class="meditation-mode" onclick="selectMedMode('gratitude',this)"><div class="mode-icon">💛</div><div class="mode-name" data-i18n="gratitudeMode">Gratitude</div><div class="mode-desc" data-i18n="gratitudeDesc">Louange</div></div>
+  </div>
+  <div class="glass-card">
+    <div class="card-title" style="margin-bottom:10px">⏱ <span data-i18n="duration">Durée</span></div>
+    <div class="meditation-duration-container">
+      <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(3,this)">3 min</button>
+      <button class="btn btn-meditation btn-sm dur-btn active" onclick="setDur(5,this)">5 min</button>
+      <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(10,this)">10 min</button>
+      <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(15,this)">15 min</button>
+      <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(20,this)">20 min</button>
+      <button class="btn btn-secondary btn-sm dur-btn" onclick="setDur(30,this)">30 min</button>
+    </div>
+  </div>
+  <div class="glass-card">
+    <div class="card-title" style="margin-bottom:10px">🎵 <span data-i18n="ambientSound">Ambiance</span></div>
+    <div class="ambient-grid">
+      <div class="ambient-btn" onclick="toggleAmbient('silence',this)"><div class="amb-icon">🤫</div><span data-i18n="silence">Silence</span></div>
+      <div class="ambient-btn" onclick="toggleAmbient('rain',this)"><div class="amb-icon">🌧️</div><span data-i18n="rain">Pluie</span></div>
+      <div class="ambient-btn" onclick="toggleAmbient('ocean',this)"><div class="amb-icon">🌊</div><span data-i18n="ocean">Océan</span></div>
+      <div class="ambient-btn" onclick="toggleAmbient('forest',this)"><div class="amb-icon">🌲</div><span data-i18n="forest">Forêt</span></div>
+      <div class="ambient-btn" onclick="toggleAmbient('fire',this)"><div class="amb-icon">🔥</div><span data-i18n="fireplace">Feu</span></div>
+      <div class="ambient-btn" onclick="toggleAmbient('birds',this)"><div class="amb-icon">🐦</div><span data-i18n="birds">Oiseaux</span></div>
+    </div>
+    <div class="volume-control"><span>🔈</span><input type="range" min="0" max="100" value="50" id="ambVol" oninput="setAmbVol(this.value)"><span>🔊</span></div>
+  </div>
+  <div class="glass-card" id="medActiveArea">
+    <div class="breathing-container" id="breathingArea">
+      <div class="breathing-phase" id="breathPhase" data-i18n="readyStart">Prêt à commencer</div>
+      <div class="breathing-circle-wrapper">
+        <div class="breathing-ring"></div><div class="breathing-ring"></div>
+        <div class="breathing-circle" id="breathCircle"><span id="breathInstr" data-i18n="pressStart">Appuyez Démarrer</span></div>
+      </div>
+      <div class="breathing-timer" id="medTimer">5:00</div>
+      <div class="breathing-controls">
+        <button class="btn btn-meditation" onclick="startMed()" id="btnStartMed">▶️ <span data-i18n="start">Démarrer</span></button>
+        <button class="btn btn-secondary hidden" onclick="pauseMed()" id="btnPauseMed">⏸</button>
+        <button class="btn btn-danger btn-sm hidden" onclick="stopMed()" id="btnStopMed">⏹</button>
+      </div>
+    </div>
+    <div class="hidden" id="scriptureArea">
+      <div style="text-align:center;padding:16px">
+        <h3 style="color:var(--meditation-light)" data-i18n="lectioDivina">Lectio Divina</h3>
+        <p style="font-size:12px;color:var(--text-secondary);margin:6px 0" data-i18n="lectioDesc">Lisez lentement, laissez le texte vous parler</p>
+        <div class="daily-verse-card" style="margin:12px 0"><div class="dv-text" id="scriptureText">"..."</div><div class="dv-ref" id="scriptureRef"></div></div>
+        <div class="breathing-timer" id="scriptureTimer">5:00</div>
+        <div class="breathing-controls" style="margin-top:12px">
+          <button class="btn btn-meditation" onclick="startMed()" id="btnStartS">▶️</button>
+          <button class="btn btn-secondary hidden" onclick="pauseMed()" id="btnPauseS">⏸</button>
+          <button class="btn btn-danger btn-sm hidden" onclick="stopMed()" id="btnStopS">⏹</button>
+        </div>
+      </div>
+    </div>
+    <div class="hidden" id="gratitudeArea">
+      <div style="text-align:center;padding:16px">
+        <h3 style="color:var(--meditation-light)">💛 <span data-i18n="gratitudeTitle">Gratitude</span></h3>
+        <p style="font-size:12px;color:var(--text-secondary);margin:6px 0 14px" data-i18n="gratitudeInst">3 sujets de reconnaissance</p>
+        <div class="form-group"><input class="form-input" id="grat1" placeholder="1. Je suis reconnaissant pour..." maxlength="200"></div>
+        <div class="form-group"><input class="form-input" id="grat2" placeholder="2. Je suis reconnaissant pour..." maxlength="200"></div>
+        <div class="form-group"><input class="form-input" id="grat3" placeholder="3. Je suis reconnaissant pour..." maxlength="200"></div>
+        <div class="breathing-timer" id="gratTimer">5:00</div>
+        <div class="breathing-controls" style="margin-top:12px">
+          <button class="btn btn-meditation" onclick="startMed()" id="btnStartG">▶️</button>
+          <button class="btn btn-secondary hidden" onclick="pauseMed()" id="btnPauseG">⏸</button>
+          <button class="btn btn-danger btn-sm hidden" onclick="stopMed()" id="btnStopG">⏹</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="glass-card">
+    <div class="card-header"><div class="card-title">📓 <span data-i18n="journal">Journal</span></div></div>
+    <div class="form-group"><textarea class="form-textarea meditation-journal-textarea" id="medJournal" placeholder="Réflexions, prières..."></textarea></div>
+    <button class="btn btn-meditation btn-sm btn-block" onclick="saveJournal()">💾 <span data-i18n="saveEntry">Sauvegarder</span></button>
+    <div id="journalEntries" class="meditation-journal-history"></div>
+  </div>
+  <div class="glass-card">
+    <div class="card-header"><div class="card-title">📊 <span data-i18n="medHistory">Historique</span></div></div>
+    <div id="medHistory"></div>
+  </div>
+</div>
+
+<!-- LIVE -->
+<div class="page" id="page-live">
+  <div class="section-header"><h2>🎥 <span data-i18n="liveTitle">Live – Philadelphie</span></h2></div>
+  <div id="liveAdminControls" class="hidden">
+    <div class="glass-card">
+      <h3 style="margin-bottom:8px">Démarrer un live</h3>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Seuls les admins peuvent lancer un live.</p>
+      <div class="camera-container" style="margin-bottom:12px">
+        <video id="livePreview" autoplay playsinline muted class="live-preview-video"></video>
+        <div class="live-preview-controls">
+          <button class="btn btn-secondary btn-sm" onclick="toggleCamera()">🔄 Changer caméra</button>
+          <button class="btn btn-secondary btn-sm" onclick="startPreview()">📷 Aperçu</button>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Titre du live</label><input class="form-input" type="text" id="liveTitleInput" placeholder="Ex: Culte d'Adoration"></div>
+      <div class="form-group"><label class="form-label">Lien YouTube / flux</label><input class="form-input" type="text" id="liveStreamUrl" placeholder="https://youtube.com/watch?v=..."></div>
+      <button class="btn btn-danger btn-block" onclick="handleStartLive()">🔴 Démarrer le live</button>
+    </div>
+  </div>
+  <div id="liveStatusArea">
+    <div id="noLiveActive" class="empty-state">
+      <div class="empty-icon">🎥</div>
+      <p>Aucun live en cours pour le moment.</p>
+      <p style="font-size:12px;margin-top:4px">Les membres seront notifiés dès qu'un administrateur lancera un direct.</p>
+    </div>
+    <div id="liveActive" class="hidden">
       <div class="glass-card">
-        <h3>Démarrer un live</h3>
-        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Seuls les admins peuvent lancer un live.</p>
-        <div class="camera-container" style="margin-bottom:12px">
-          <video id="livePreview" autoplay playsinline muted class="live-preview-video"></video>
-          <div class="live-preview-controls">
-            <button class="btn btn-secondary btn-sm" onclick="toggleCamera()" id="btnCam">🔄 Changer caméra</button>
-            <button class="btn btn-secondary btn-sm" onclick="startPreview()">📷 Aperçu</button>
-          </div>
+        <div class="card-header">
+          <div><div class="live-badge">🔴 EN DIRECT</div><h3 id="currentLiveTitle" style="margin-top:6px"></h3></div>
+          <button id="stopLiveBtn" class="btn btn-danger btn-sm hidden" onclick="handleStopLive()">Arrêter</button>
         </div>
-        <div class="form-group"><label class="form-label">Titre du live</label><input class="form-input" type="text" id="liveTitleInput" placeholder="Ex: Culte d'Adoration"></div>
-        <div class="form-group"><label class="form-label">Lien du flux (YouTube/Daily.co/Twitch)</label><input class="form-input" type="text" id="liveStreamUrl" placeholder="https://..."></div>
-        <button class="btn btn-gold btn-block" onclick="handleStartLive()">Démarrer le live pour tous</button>
-      </div>
-    </div>
-
-    <!-- LIVE STATUS AREA (Visible to everyone) -->
-    <div id="liveStatusArea">
-      <div id="noLiveActive" class="empty-state">
-        <div class="empty-icon">🎥</div>
-        <p>Aucun live en cours pour le moment.</p>
-        <p style="font-size:12px;margin-top:4px">Les utilisateurs seront notifiés dès qu'un administrateur lancera un direct.</p>
-      </div>
-      
-      <div id="liveActive" class="hidden">
-        <div class="glass-card">
-          <div class="card-header">
-            <div>
-              <div class="live-badge">🔴 EN DIRECT</div>
-              <h3 id="currentLiveTitle" style="margin-top:6px"></h3>
-            </div>
-            <button id="stopLiveBtn" class="btn btn-danger btn-sm hidden" onclick="handleStopLive()">Arrêter le live</button>
-          </div>
-          <div class="camera-container live-player-container" id="livePlayerContainer">
-            <!-- Iframe or Video Player will be inserted here -->
-            <p id="playerPlaceholder">Chargement du flux...</p>
-          </div>
-        </div>
+        <div class="live-player-container" id="livePlayerContainer"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ========== SERMONS ========== -->
-  <div class="page" id="page-sermons">
-    <div class="section-header"><h2>🎬 <span data-i18n="sermonsTitle">Prédications</span></h2></div>
-    <div class="tabs">
-      <button class="tab active" onclick="showSermonTab('videos',this)">📹 Vidéos</button>
-      <button class="tab" onclick="showSermonTab('youtube',this)">▶️ YouTube</button>
-      <button class="tab" onclick="showSermonTab('upload',this)">⬆️ Upload</button>
+<!-- SERMONS -->
+<div class="page" id="page-sermons">
+  <div class="section-header"><h2>🎬 <span data-i18n="sermonsTitle">Prédications</span></h2></div>
+  <div class="tabs">
+    <button class="tab active" onclick="showSermonTab('videos',this)">📹 Vidéos</button>
+    <button class="tab" onclick="showSermonTab('youtube',this)">▶️ YouTube</button>
+    <button class="tab" onclick="showSermonTab('upload',this)">⬆️ Upload</button>
+  </div>
+  <div class="tab-content active" id="sermon-tab-videos">
+    <div id="sermonsList"><div class="empty-state"><div class="empty-icon">🎬</div><p data-i18n="noSermons">Aucune prédication</p></div></div>
+  </div>
+  <div class="tab-content" id="sermon-tab-youtube">
+    <div class="glass-card">
+      <div class="form-group"><label class="form-label">YouTube URL</label><input class="form-input" type="url" id="ytUrl" placeholder="https://youtube.com/watch?v=..."></div>
+      <div class="form-group"><label class="form-label">Titre</label><input class="form-input" type="text" id="ytTitle" maxlength="150"></div>
+      <button class="btn btn-gold btn-block" onclick="addYT()">➕ Ajouter</button>
     </div>
-    <div class="tab-content active" id="sermon-tab-videos"><div id="sermonsList"><div class="empty-state"><div class="empty-icon">🎬</div><p data-i18n="noSermons">Aucune prédication</p></div></div></div>
-    <div class="tab-content" id="sermon-tab-youtube">
-      <div class="glass-card">
-        <div class="form-group"><label class="form-label">YouTube URL</label><input class="form-input" type="url" id="ytUrl" placeholder="https://youtube.com/watch?v=..."></div>
-        <div class="form-group"><label class="form-label">Titre</label><input class="form-input" type="text" id="ytTitle" maxlength="150"></div>
-        <button class="btn btn-gold btn-block" onclick="addYT()">➕ Ajouter</button>
-      </div><div id="ytList"></div>
+    <div id="ytList"></div>
+  </div>
+  <div class="tab-content" id="sermon-tab-upload">
+    <div class="glass-card">
+      <div class="file-upload-area" onclick="document.getElementById('vidUp').click()">
+        <div class="upload-icon">🎬</div><p>Cliquer pour sélectionner une vidéo</p>
+        <input type="file" id="vidUp" accept="video/*" style="display:none" onchange="handleVidUp(event)">
+      </div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">Titre</label><input class="form-input" type="text" id="vidTitle" maxlength="150"></div>
+      <div class="upload-progress hidden" id="vidProg"><div class="upload-progress-bar" id="vidProgBar"></div></div>
+      <p class="hidden" id="vidProgTxt" style="font-size:11px;color:var(--text-secondary);text-align:center;margin-top:4px"></p>
     </div>
-    <div class="tab-content" id="sermon-tab-upload">
-      <div class="glass-card">
-        <div class="file-upload-area" onclick="document.getElementById('vidUp').click()"><div class="upload-icon">🎬</div><p>Cliquer pour sélectionner</p><input type="file" id="vidUp" accept="video/*" style="display:none" onchange="handleVidUp(event)"></div>
-        <div class="form-group" style="margin-top:10px"><label class="form-label">Titre</label><input class="form-input" type="text" id="vidTitle" maxlength="150"></div>
-        <div class="upload-progress hidden" id="vidProg"><div class="upload-progress-bar" id="vidProgBar"></div></div>
-        <p class="hidden" id="vidProgTxt" style="font-size:11px;color:var(--text-secondary);text-align:center;margin-top:4px"></p>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<div class="page" id="page-gallery">
+  <div class="section-header">
+    <h2>🖼 <span data-i18n="galleryTitle">Galerie</span></h2>
+    <button class="btn btn-gold btn-sm" onclick="document.getElementById('galUp').click()">➕ Photo</button>
+    <input type="file" id="galUp" accept="image/*" multiple style="display:none" onchange="handleGalUp(event)">
+  </div>
+  <div class="upload-progress hidden" id="galProg"><div class="upload-progress-bar" id="galProgBar"></div></div>
+  <div class="gallery-grid" id="galGrid">
+    <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📸</div><p data-i18n="noPhotos">Aucune photo</p></div>
+  </div>
+</div>
+
+<!-- PROGRAMS -->
+<div class="page" id="page-programs">
+  <div class="section-header"><h2>📅 <span data-i18n="programsTitle">Programme des cultes</span></h2></div>
+  <div class="programs-section">
+    <div class="program-card">
+      <div class="program-title" data-i18n="sundayService">Culte du dimanche</div>
+      <div class="program-time">⏰ 8h00 – 11h30</div>
+      <div class="program-desc" data-i18n="sundayDesc">Adoration, enseignement biblique, communion fraternelle</div>
+    </div>
+    <div class="program-card">
+      <div class="program-title" data-i18n="wednesdayPrayer">Prière du mercredi</div>
+      <div class="program-time">⏰ 17h30 – 18h30</div>
+      <div class="program-desc" data-i18n="wednesdayDesc">Intercession, louange, méditation de la Parole</div>
+    </div>
+    <div class="program-card">
+      <div class="program-title" data-i18n="fridayPrayer">Veillée de prière</div>
+      <div class="program-time">⏰ 21h00 – 23h00</div>
+      <div class="program-desc" data-i18n="fridayDesc">Louange intense, prière pour les besoins, combat spirituel</div>
+    </div>
+  </div>
+</div>
+
+<!-- ANNOUNCEMENTS -->
+<div class="page" id="page-announcements">
+  <div class="section-header"><h2>📢 <span data-i18n="announcementsTitle">Informations & Annonces</span></h2></div>
+  <div id="adminAnnouncementForm" class="hidden">
+    <div class="glass-card">
+      <h3 style="margin-bottom:12px">📢 Nouvelle Annonce</h3>
+      <div class="form-group"><label class="form-label">Titre</label><input class="form-input" id="annTitle" placeholder="Ex: Grand Culte de Dimanche"></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" id="annText" placeholder="Écrivez ici l'information..."></textarea></div>
+      <button class="btn btn-gold btn-block" onclick="postAnnouncement()">📤 Diffuser</button>
+    </div>
+  </div>
+  <div id="announcementsList"></div>
+</div>
+
+<!-- CHAT -->
+<div class="page" id="page-chat">
+  <div class="section-header"><h2>💬 <span data-i18n="chatTitle">Chat Communautaire</span></h2></div>
+  <div class="glass-card chat-container chat-container-inner">
+    <div id="chatMessages" class="chat-messages-area"></div>
+    <div class="chat-controls chat-controls-area">
+      <div id="chatPreview" class="hidden chat-media-preview">
+        <img id="chatImgPreview" class="chat-media-img" alt="">
+        <video id="chatVidPreview" class="chat-media-vid" controls></video>
+        <button class="btn btn-danger btn-sm chat-media-remove" onclick="clearChatMedia()">×</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('chatMedia').click()">📎</button>
+        <input type="file" id="chatMedia" accept="image/*,video/*" style="display:none" onchange="previewChatMedia(event)">
+        <input class="form-input" id="chatInput" placeholder="Votre message..." style="flex:1" onkeydown="if(event.key==='Enter')sendChatMessage()">
+        <button class="btn btn-gold btn-sm" onclick="sendChatMessage()">📤</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ========== GALLERY ========== -->
-  <div class="page" id="page-gallery">
-    <div class="section-header"><h2>🖼 <span data-i18n="galleryTitle">Galerie</span></h2>
-      <button class="btn btn-gold btn-sm" onclick="document.getElementById('galUp').click()">➕ Photo</button>
-      <input type="file" id="galUp" accept="image/*" multiple style="display:none" onchange="handleGalUp(event)">
+<!-- ABOUT -->
+<div class="page" id="page-about">
+  <div class="section-header"><h2>ℹ️ <span data-i18n="aboutTitle">À propos de nous</span></h2></div>
+  <div class="about-section" id="aboutContent"></div>
+</div>
+
+<!-- CONTACT -->
+<div class="page" id="page-contact">
+  <div class="section-header"><h2>📞 <span data-i18n="contactTitle">Nous contacter</span></h2></div>
+  <div class="contact-section">
+    <div class="contact-info">
+      <div class="contact-item"><span class="icon">📞</span><span>+226 76 75 30 35 (WhatsApp)</span></div>
+      <div class="contact-item"><span class="icon">📱</span><span>+226 07 67 18 39</span></div>
+      <div class="contact-item"><span class="icon">✉️</span><span>cerouezzinvillenord@gmail.com</span></div>
+      <div class="contact-item"><span class="icon">📍</span><span>Bobo-Dioulasso, à 500m du CEMA de Dafra</span></div>
     </div>
-    <div class="upload-progress hidden" id="galProg"><div class="upload-progress-bar" id="galProgBar"></div></div>
-    <div class="gallery-grid" id="galGrid"><div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📸</div><p data-i18n="noPhotos">Aucune photo</p></div></div>
-  </div>
-
-  <!-- ========== PROGRAMS ========== -->
-  <div class="page" id="page-programs">
-    <div class="section-header"><h2>📅 <span data-i18n="programsTitle">Programme des cultes</span></h2></div>
-    <div class="programs-section">
-      <div class="program-card">
-        <div class="program-title" data-i18n="sundayService">Culte du dimanche</div>
-        <div class="program-time">⏰ 8h00 – 11h30</div>
-        <div class="program-desc" data-i18n="sundayDesc">Adoration, enseignement biblique, communion fraternelle</div>
-      </div>
-      <div class="program-card">
-        <div class="program-title" data-i18n="wednesdayPrayer">Prière du mercredi</div>
-        <div class="program-time">⏰ 17h30 – 18h30</div>
-        <div class="program-desc" data-i18n="wednesdayDesc">Intercession, louange, méditation de la Parole</div>
-      </div>
-      <div class="program-card">
-        <div class="program-title" data-i18n="fridayPrayer">Veillée de prière</div>
-        <div class="program-time">⏰ 21h00 – 23h00</div>
-        <div class="program-desc" data-i18n="fridayDesc">Louange intense, prière pour les besoins, combat spirituel</div>
-      </div>
-      <!-- Ajoutez d'autres programmes si nécessaire -->
+    <div class="contact-buttons">
+      <a href="mailto:cerouezzinvillenord@gmail.com?subject=Message%20depuis%20l%27application" class="btn btn-gold contact-btn">📧 Email</a>
+      <a href="https://wa.me/22676753035?text=Message%20depuis%20l%27application" target="_blank" class="btn btn-success contact-btn">💬 WhatsApp</a>
+      <a href="sms:+22676753035?body=Message%20depuis%20l%27application" class="btn btn-secondary contact-btn">📱 SMS</a>
+    </div>
+    <div style="margin-top:25px">
+      <h4 style="margin-bottom:12px;color:var(--gold)" data-i18n="serviceTimes">Horaires des cultes</h4>
+      <div class="schedule-item"><span class="day" data-i18n="sunday">Dimanche</span><span class="time">8h00 – 11h30</span></div>
+      <div class="schedule-item"><span class="day" data-i18n="wednesday">Mercredi</span><span class="time">17h30 – 18h30 (prière)</span></div>
+      <div class="schedule-item"><span class="day" data-i18n="friday">Vendredi</span><span class="time">21h00 – 23h00 (veillée)</span></div>
     </div>
   </div>
+</div>
 
-  <!-- ========== ANNOUNCEMENTS ========== -->
-  <div class="page" id="page-announcements">
-    <div class="section-header"><h2>📢 <span data-i18n="announcementsTitle">Informations & Annonces</span></h2></div>
-    <div id="adminAnnouncementForm" class="hidden">
-      <div class="glass-card">
-        <h3>📢 Nouvelle Annonce</h3>
-        <div class="form-group"><label class="form-label">Titre</label><input class="form-input" id="annTitle" placeholder="Ex: Grand Culte de Dimanche"></div>
-        <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" id="annText" placeholder="Écrivez ici l'information..."></textarea></div>
-        <button class="btn btn-gold btn-block" onclick="postAnnouncement()">Diffuser l'information</button>
-      </div>
-    </div>
-    <div id="announcementsList"></div>
+<!-- DASHBOARD SUPERADMIN -->
+<div class="page" id="page-dashboard">
+  <div class="section-header">
+    <h2>👑 Tableau de bord</h2>
+    <span class="live-badge" style="animation:none;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#1a1a2e">SUPERADMIN</span>
   </div>
-
-  <!-- ========== CHAT ========== -->
-  <div class="page" id="page-chat">
-    <div class="section-header"><h2>💬 <span data-i18n="chatTitle">Chat Communautaire</span></h2></div>
-    <div class="glass-card chat-container chat-container-inner">
-      <div id="chatMessages" class="chat-messages-area"></div>
-      <div class="chat-controls chat-controls-area">
-        <div id="chatPreview" class="hidden chat-media-preview">
-          <img id="chatImgPreview" class="chat-media-img">
-          <video id="chatVidPreview" class="chat-media-vid" controls></video>
-          <button class="btn btn-danger btn-sm chat-media-remove" onclick="clearChatMedia()">×</button>
-        </div>
-        <div style="display:flex; gap:8px">
-          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('chatMedia').click()">📎</button>
-          <input type="file" id="chatMedia" accept="image/*,video/*" style="display:none" onchange="previewChatMedia(event)">
-          <input class="form-input" id="chatInput" placeholder="Votre message..." style="flex:1">
-          <button class="btn btn-gold btn-sm" onclick="sendChatMessage()">📤</button>
-        </div>
-      </div>
+  <!-- KPI -->
+  <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
+    <div class="stat-card" style="border-left:3px solid var(--gold)">
+      <div class="stat-icon">👥</div><div class="stat-value" id="dashTotalUsers">0</div><div class="stat-label">Utilisateurs</div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid var(--success)">
+      <div class="stat-icon">🎬</div><div class="stat-value" id="dashTotalSermons">0</div><div class="stat-label">Prédications</div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid var(--meditation)">
+      <div class="stat-icon">🧘</div><div class="stat-value" id="dashTotalSessions">0</div><div class="stat-label">Sessions méditation</div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid var(--danger)">
+      <div class="stat-icon">📢</div><div class="stat-value" id="dashTotalAnn">0</div><div class="stat-label">Annonces</div>
     </div>
   </div>
-
-  <!-- ========== ABOUT ========== -->
-  <div class="page" id="page-about">
-    <div class="section-header"><h2>ℹ️ <span data-i18n="aboutTitle">À propos de nous</span></h2></div>
-    <div class="about-section" id="aboutContent"></div>
-  </div>
-
-  <!-- ========== CONTACT ========== -->
-  <div class="page" id="page-contact">
-    <div class="section-header"><h2>📞 <span data-i18n="contactTitle">Nous contacter</span></h2></div>
-    <div class="contact-section">
-      <div class="contact-info">
-        <div class="contact-item">
-          <span class="icon">📞</span>
-          <span>+226 76 75 30 35 (WhatsApp)</span>
-        </div>
-        <div class="contact-item">
-          <span class="icon">📱</span>
-          <span>+226 07 67 18 39</span>
-        </div>
-        <div class="contact-item">
-          <span class="icon">✉️</span>
-          <span>cerouezzinvillenord@gmail.com</span>
-        </div>
-      </div>
-      <div class="contact-buttons">
-        <a href="mailto:cerouezzinvillenord@gmail.com?subject=Message%20depuis%20l%27application" class="btn btn-gold contact-btn">📧 Email</a>
-        <a href="https://wa.me/22676753035?text=Message%20depuis%20l%27application" target="_blank" class="btn btn-success contact-btn">💬 WhatsApp</a>
-        <a href="sms:+22676753035?body=Message%20depuis%20l%27application" class="btn btn-secondary contact-btn">📱 SMS</a>
-      </div>
-      <div style="margin-top: 25px;">
-        <h4 data-i18n="serviceTimes">Horaires des cultes</h4>
-        <div class="schedule-item">
-          <span class="day" data-i18n="sunday">Dimanche</span>
-          <span class="time">8h00 – 11h30</span>
-        </div>
-        <div class="schedule-item">
-          <span class="day" data-i18n="wednesday">Mercredi</span>
-          <span class="time">17h30 – 18h30 (prière)</span>
-        </div>
-        <div class="schedule-item">
-          <span class="day" data-i18n="friday">Vendredi</span>
-          <span class="time">21h00 – 23h00 (prière)</span>
-        </div>
-      </div>
+  <!-- Live -->
+  <div class="glass-card" style="border-color:var(--danger)">
+    <div class="card-header">
+      <div class="card-title">🔴 Gestion du Live</div>
+      <div id="dashLiveStatus" class="live-badge" style="animation:none;background:var(--text-muted)">INACTIF</div>
+    </div>
+    <div id="dashLiveInfo" class="hidden" style="margin-bottom:12px;padding:10px;background:rgba(244,67,54,.08);border-radius:8px;border-left:3px solid var(--danger)">
+      <p style="font-weight:700;color:var(--gold)" id="dashLiveTitle"></p>
+      <p style="font-size:12px;color:var(--text-secondary)" id="dashLiveUrl"></p>
+    </div>
+    <div class="form-group"><label class="form-label">Titre du live</label><input class="form-input" type="text" id="dashLiveTitleInput" placeholder="Ex: Culte du dimanche"></div>
+    <div class="form-group"><label class="form-label">URL YouTube / flux</label><input class="form-input" type="text" id="dashLiveUrlInput" placeholder="https://youtube.com/watch?v=..."></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-danger" style="flex:1" onclick="dashStartLive()">🔴 Démarrer</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="dashStopLive()">⏹ Arrêter</button>
     </div>
   </div>
+  <!-- Annonce -->
+  <div class="glass-card">
+    <div class="card-title" style="margin-bottom:12px">📢 Nouvelle Annonce</div>
+    <div class="form-group"><label class="form-label">Titre</label><input class="form-input" id="dashAnnTitle" placeholder="Titre de l'annonce"></div>
+    <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" id="dashAnnText" placeholder="Contenu de l'annonce..."></textarea></div>
+    <button class="btn btn-gold btn-block" onclick="dashPostAnnouncement()">📤 Publier l'annonce</button>
+  </div>
+  <!-- Utilisateurs -->
+  <div class="glass-card">
+    <div class="card-header">
+      <div class="card-title">👥 Utilisateurs</div>
+      <button class="btn btn-gold btn-sm" onclick="dashRefreshUsers()">🔄 Actualiser</button>
+    </div>
+    <div id="dashUserList" class="user-list-container"></div>
+  </div>
+  <!-- YouTube prédications -->
+  <div class="glass-card">
+    <div class="card-title" style="margin-bottom:12px">▶️ Ajouter une prédication YouTube</div>
+    <div class="form-group"><label class="form-label">URL YouTube</label><input class="form-input" type="url" id="dashYtUrl" placeholder="https://youtube.com/watch?v=..."></div>
+    <div class="form-group"><label class="form-label">Titre</label><input class="form-input" type="text" id="dashYtTitle" maxlength="150"></div>
+    <button class="btn btn-gold btn-block" onclick="dashAddYT()">➕ Ajouter</button>
+    <div id="dashYtList" style="margin-top:10px"></div>
+  </div>
+  <!-- Activité récente -->
+  <div class="glass-card">
+    <div class="card-title" style="margin-bottom:12px">📋 Activité récente</div>
+    <div id="dashActivity"></div>
+  </div>
+  <!-- Zone dangereuse -->
+  <div class="glass-card" style="border-color:var(--danger)">
+    <div class="card-title" style="margin-bottom:12px;color:var(--danger)">⚠️ Zone d'administration</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="dashExportData()">📥 Exporter les données (JSON)</button>
+      <button class="btn btn-danger btn-sm" onclick="dashClearChat()">🗑 Vider le chat</button>
+      <button class="btn btn-danger btn-sm" onclick="dashClearGallery()">🗑 Vider la galerie</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <!-- MODALS -->
-<div class="modal-overlay" id="imageZoomModal" onclick="closeModal('imageZoomModal')"><img class="modal-image" id="zoomImg" src="" alt=""></div>
-<div class="modal-overlay" id="notifModal">
-  <div class="modal-content"><h3 style="margin-bottom:14px">🔔 Notifications</h3><div id="notifList"><div class="empty-state"><div class="empty-icon">🔔</div><p>—</p></div></div><button class="btn btn-secondary btn-block" style="margin-top:14px" onclick="closeModal('notifModal')">Fermer</button></div>
+<div class="modal-overlay" id="imageZoomModal" onclick="closeModal('imageZoomModal')">
+  <img class="modal-image" id="zoomImg" src="" alt="">
 </div>
-
-<!-- AUTH MODAL -->
+<div class="modal-overlay" id="notifModal">
+  <div class="modal-content">
+    <h3 style="margin-bottom:14px">🔔 Notifications</h3>
+    <div id="notifList"><div class="empty-state"><div class="empty-icon">🔔</div><p>Aucune notification</p></div></div>
+    <button class="btn btn-secondary btn-block" style="margin-top:14px" onclick="closeModal('notifModal')">Fermer</button>
+  </div>
+</div>
 <div class="modal-overlay" id="authModal">
   <div class="modal-content">
     <div id="authLogin">
@@ -507,25 +600,22 @@
           <span class="password-toggle" onclick="togglePass('editPass', this)">👁️</span>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-success btn-sm flex-1" onclick="handleUpdateProfile()">Enregistrer</button>
+          <button class="btn btn-success btn-sm" style="flex:1" onclick="handleUpdateProfile()">Enregistrer</button>
           <button class="btn btn-secondary btn-sm" onclick="showProfileEdit(false)">Annuler</button>
         </div>
       </div>
       <div id="adminPanel" class="hidden admin-panel-container">
         <h4 style="margin-bottom:8px">👑 Administration</h4>
-        <div class="stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
-          <div class="stat-card admin-stat-card"><div class="stat-value admin-stat-value" id="adminStatUsers">0</div><div class="stat-label">Utilisateurs</div></div>
-          <div class="stat-card admin-stat-card"><div class="stat-value admin-stat-live-off" id="adminStatLive">OFF</div><div class="stat-label">Statut Live</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" style="flex:1" onclick="navigate('dashboard');closeModal('authModal')">📊 Tableau de bord</button>
+          <button class="btn btn-secondary btn-sm" style="flex:1" onclick="manageUsers()">👥 Utilisateurs</button>
         </div>
-        <button class="btn btn-gold btn-sm btn-block" onclick="manageUsers()" style="margin-bottom:6px">Gérer les utilisateurs</button>
       </div>
       <button class="btn btn-danger btn-block" onclick="handleLogout()" style="margin-top:14px">Se déconnecter</button>
     </div>
     <button class="btn btn-secondary btn-block" style="margin-top:14px" onclick="closeModal('authModal')">Fermer</button>
   </div>
 </div>
-
-<!-- USER MANAGEMENT MODAL -->
 <div class="modal-overlay" id="userManageModal">
   <div class="modal-content">
     <h3 style="margin-bottom:14px">👥 Gestion des utilisateurs</h3>
@@ -533,8 +623,6 @@
     <button class="btn btn-secondary btn-block" style="margin-top:14px" onclick="closeModal('userManageModal')">Fermer</button>
   </div>
 </div>
-
-<!-- Meditation Completion -->
 <div class="completion-overlay" id="completionOverlay">
   <div class="completion-icon">🙏</div>
   <div class="completion-text" data-i18n="medComplete">Méditation terminée</div>
@@ -542,19 +630,14 @@
   <div class="completion-church">⛪ CER Ouezzinville Nord — Temple Philadelphie</div>
   <button class="btn btn-gold" style="margin-top:20px" onclick="closeCompletion()">✨ Amen</button>
 </div>
-
-<!-- WELCOME OVERLAY -->
-<div class="modal-overlay" id="welcomeOverlay" style="z-index: 10001; background: rgba(0,0,0,0.9);">
-  <div style="text-align: center; animation: modalIn 0.5s ease;">
-    <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
-    <h2 style="font-size: 28px; color: var(--gold); margin-bottom: 10px;">Bienvenu dans la Communauté</h2>
-    <p style="color: var(--text-secondary);">CER Ouezzinville Nord — Temple Philadelphie</p>
+<div class="modal-overlay" id="welcomeOverlay" style="z-index:10001;background:rgba(0,0,0,0.9)">
+  <div style="text-align:center;animation:modalIn 0.5s ease">
+    <div style="font-size:60px;margin-bottom:20px">🎉</div>
+    <h2 style="font-size:28px;color:var(--gold);margin-bottom:10px">Bienvenu dans la Communauté</h2>
+    <p style="color:var(--text-secondary)">CER Ouezzinville Nord — Temple Philadelphie</p>
   </div>
 </div>
-
 <canvas id="photoCanvas" style="display:none"></canvas>
-
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" defer></script>
 <script src="data.js" defer></script>
 <script src="script.js" defer></script>

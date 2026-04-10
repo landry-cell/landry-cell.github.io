@@ -1103,3 +1103,264 @@ function askAIBible() {
     resp.textContent = `💡 Pour "${query}", voici quelques versets : Jean 3:16, Psaume 23:1, Jérémie 29:11. Consultez ces passages dans la Bible ci-dessous.`;
   }, 800);
 }
+
+// =============================================
+// BIBLE — utiliser BC_FULL si disponible
+// =============================================
+// Override updateChapters pour utiliser la table complète
+const _origUpdateChapters = updateChapters;
+function updateChapters() {
+  const b = document.getElementById('bibleBook')?.value;
+  if (!b) return;
+  const s = document.getElementById('bibleChapter');
+  if (!s) return;
+  const chapCount = (typeof BC_FULL !== 'undefined' ? BC_FULL[b] : null) || BC[b] || 50;
+  const frag = document.createDocumentFragment();
+  for (let i = 1; i <= chapCount; i++) {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = i;
+    frag.appendChild(opt);
+  }
+  s.innerHTML = '';
+  s.appendChild(frag);
+}
+
+// =============================================
+// 👑 DASHBOARD SUPERADMIN
+// =============================================
+async function loadDashboard() {
+  // KPIs
+  const users = getAppUsers();
+  document.getElementById('dashTotalUsers').textContent = users.length;
+  const sessions = JSON.parse(localStorage.getItem('medSess') || '[]');
+  document.getElementById('dashTotalSessions').textContent = sessions.length;
+  const sermons = await dbGetAll('sermons');
+  const ytSermons = JSON.parse(localStorage.getItem('ytSermons') || '[]');
+  document.getElementById('dashTotalSermons').textContent = sermons.length + ytSermons.length;
+  const anns = await dbGetAll('announcements');
+  document.getElementById('dashTotalAnn').textContent = anns.length;
+  // Stat membres sur accueil
+  document.getElementById('statMembers').textContent = users.length;
+  document.getElementById('statSermons').textContent = sermons.length + ytSermons.length;
+
+  // Live status
+  dashRefreshLiveStatus();
+  // Utilisateurs
+  dashRefreshUsers();
+  // YouTube list
+  dashRefreshYtList();
+  // Activité récente
+  dashRefreshActivity(users, sessions, anns);
+}
+
+function dashRefreshLiveStatus() {
+  const live = JSON.parse(localStorage.getItem(LIVE_KEY) || 'null');
+  const statusBadge = document.getElementById('dashLiveStatus');
+  const liveInfo = document.getElementById('dashLiveInfo');
+  if (live && live.active) {
+    if (statusBadge) { statusBadge.textContent = 'EN DIRECT'; statusBadge.style.background = 'var(--danger)'; }
+    if (liveInfo) {
+      liveInfo.classList.remove('hidden');
+      document.getElementById('dashLiveTitle').textContent = live.title || '—';
+      document.getElementById('dashLiveUrl').textContent = live.url || '—';
+    }
+    const stopBtn = document.getElementById('stopLiveBtn');
+    if (stopBtn) stopBtn.classList.remove('hidden');
+  } else {
+    if (statusBadge) { statusBadge.textContent = 'INACTIF'; statusBadge.style.background = 'var(--text-muted)'; }
+    if (liveInfo) liveInfo.classList.add('hidden');
+  }
+}
+
+function dashRefreshUsers() {
+  const users = getAppUsers();
+  const list = document.getElementById('dashUserList');
+  if (!list) return;
+  list.innerHTML = users.map(u => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-card);border-radius:8px;margin-bottom:6px">
+      <div>
+        <p style="font-weight:700;color:var(--gold);font-size:13px">${escapeHtml(u.name)}</p>
+        <p style="font-size:11px;color:var(--text-muted)">${escapeHtml(u.email)}</p>
+        <p style="font-size:10px;margin-top:2px">${new Date(u.date).toLocaleDateString()}</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <select class="form-select" style="width:auto;padding:3px 6px;font-size:11px" onchange="dashChangeRole('${u.id}',this.value)">
+          <option value="user" ${u.role==='user'?'selected':''}>Utilisateur</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+          <option value="superadmin" ${u.role==='superadmin'?'selected':''}>Superadmin</option>
+        </select>
+        ${u.email !== 'landrytchonda@gmail.com' ? `<button class="btn btn-danger btn-sm" style="padding:2px 8px;font-size:11px" onclick="dashDeleteUser('${u.id}')">🗑</button>` : ''}
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--text-muted);text-align:center">Aucun utilisateur</p>';
+}
+
+function dashChangeRole(uid, newRole) {
+  changeUserRole(uid, newRole);
+  dashRefreshUsers();
+  document.getElementById('dashTotalUsers').textContent = getAppUsers().length;
+}
+
+function dashDeleteUser(uid) {
+  deleteUser(uid);
+  dashRefreshUsers();
+  document.getElementById('dashTotalUsers').textContent = getAppUsers().length;
+}
+
+function dashRefreshYtList() {
+  const s = JSON.parse(localStorage.getItem('ytSermons') || '[]');
+  const c = document.getElementById('dashYtList');
+  if (!c) return;
+  c.innerHTML = s.length ? s.map(v => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-card);border-radius:8px;margin-bottom:4px">
+      <span style="font-size:12px;color:var(--text-secondary)">${escapeHtml(v.title)}</span>
+      <button class="btn btn-danger btn-sm" style="padding:2px 8px" onclick="dashDeleteYT('${v.id}')">🗑</button>
+    </div>
+  `).join('') : '<p style="font-size:12px;color:var(--text-muted)">Aucune prédication YouTube</p>';
+}
+
+function dashDeleteYT(id) {
+  let s = JSON.parse(localStorage.getItem('ytSermons') || '[]');
+  s = s.filter(v => v.id != id);
+  localStorage.setItem('ytSermons', JSON.stringify(s));
+  dashRefreshYtList();
+  showToast('🗑', 'Prédication supprimée', 'info');
+}
+
+function dashRefreshActivity(users, sessions, anns) {
+  const c = document.getElementById('dashActivity');
+  if (!c) return;
+  const events = [
+    ...users.map(u => ({ icon: '👤', text: `Inscription : ${u.name}`, date: u.date })),
+    ...sessions.slice(0, 5).map(s => ({ icon: '🧘', text: `Méditation : ${s.mode} (${Math.round((s.duration||0)/60)} min)`, date: s.date })),
+    ...(anns || []).map(a => ({ icon: '📢', text: `Annonce : ${a.title}`, date: a.date }))
+  ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+
+  c.innerHTML = events.length ? events.map(e => `
+    <div class="calendar-event">
+      <div class="event-date" style="min-width:36px;font-size:22px">${e.icon}</div>
+      <div class="event-info">
+        <h4 style="font-size:12px">${escapeHtml(e.text)}</h4>
+        <p>${timeAgo(e.date)}</p>
+      </div>
+    </div>
+  `).join('') : '<p style="color:var(--text-muted);text-align:center;font-size:12px">Aucune activité récente</p>';
+}
+
+function dashStartLive() {
+  const title = document.getElementById('dashLiveTitleInput').value.trim();
+  const url = document.getElementById('dashLiveUrlInput').value.trim();
+  if (!title || !url) return showToast('⚠️', 'Titre et URL requis', 'error');
+  localStorage.setItem(LIVE_KEY, JSON.stringify({ active: true, title, url }));
+  checkLiveStatus();
+  dashRefreshLiveStatus();
+  showToast('🔴', 'Live démarré !', 'success');
+  addNotif('🔴', `Live démarré : ${title}`);
+}
+
+function dashStopLive() {
+  localStorage.removeItem(LIVE_KEY);
+  checkLiveStatus();
+  dashRefreshLiveStatus();
+  showToast('⏹', 'Live arrêté', 'info');
+}
+
+async function dashPostAnnouncement() {
+  const title = document.getElementById('dashAnnTitle').value.trim();
+  const text = document.getElementById('dashAnnText').value.trim();
+  if (!title || !text) return showToast('⚠️', 'Titre et message requis', 'error');
+  await dbPut('announcements', { id: Date.now(), title, text, date: new Date().toISOString(), admin: currentUser.name });
+  document.getElementById('dashAnnTitle').value = '';
+  document.getElementById('dashAnnText').value = '';
+  const anns = await dbGetAll('announcements');
+  document.getElementById('dashTotalAnn').textContent = anns.length;
+  loadAnnouncements();
+  showToast('📢', 'Annonce publiée !', 'success');
+}
+
+function dashAddYT() {
+  const url = document.getElementById('dashYtUrl').value.trim();
+  const title = document.getElementById('dashYtTitle').value.trim();
+  if (!url || !title) return showToast('⚠️', 'URL et titre requis', 'error');
+  const match = url.match(/v=([^&]+)/);
+  if (!match) return showToast('❌', 'URL YouTube invalide', 'error');
+  const youtubeId = match[1];
+  let s = JSON.parse(localStorage.getItem('ytSermons') || '[]');
+  s.unshift({ id: Date.now(), title, youtubeId });
+  localStorage.setItem('ytSermons', JSON.stringify(s));
+  document.getElementById('dashYtUrl').value = '';
+  document.getElementById('dashYtTitle').value = '';
+  dashRefreshYtList();
+  showToast('✅', 'Prédication ajoutée', 'success');
+}
+
+async function dashExportData() {
+  const users = getAppUsers();
+  const sermons = await dbGetAll('sermons');
+  const anns = await dbGetAll('announcements');
+  const ytSermons = JSON.parse(localStorage.getItem('ytSermons') || '[]');
+  const sessions = JSON.parse(localStorage.getItem('medSess') || '[]');
+  const data = {
+    exportDate: new Date().toISOString(),
+    users: users.map(u => ({ id: u.id, name: u.name, email: u.email, role: u.role, date: u.date })),
+    sermons, ytSermons, announcements: anns,
+    meditationSessions: sessions
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `philadelphie-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📥', 'Export téléchargé', 'success');
+}
+
+async function dashClearChat() {
+  if (!confirm('Vider tout le chat ? Cette action est irréversible.')) return;
+  const db = await getDB();
+  db.transaction('chat', 'readwrite').objectStore('chat').clear();
+  showToast('🗑', 'Chat vidé', 'info');
+}
+
+async function dashClearGallery() {
+  if (!confirm('Vider toute la galerie ? Cette action est irréversible.')) return;
+  const db = await getDB();
+  db.transaction('gallery', 'readwrite').objectStore('gallery').clear();
+  showToast('🗑', 'Galerie vidée', 'info');
+  if (document.getElementById('page-gallery').classList.contains('active')) loadGalleryFromStorage();
+}
+
+// Charger le dashboard quand on navigue dessus
+const _origNavigate = navigate;
+async function navigate(p) {
+  await _origNavigate(p);
+  if (p === 'dashboard') {
+    if (currentUser && currentUser.role === 'superadmin') {
+      loadDashboard();
+    } else {
+      navigate('home');
+      showToast('🔒', 'Accès réservé au superadmin', 'error');
+    }
+  }
+}
+
+// Afficher le bouton dashboard dans la nav si superadmin
+function updateUIByRole() {
+  const isAdmin = currentUser && (currentUser.role === 'superadmin' || currentUser.role === 'admin');
+  const isSuperAdmin = currentUser && currentUser.role === 'superadmin';
+  document.getElementById('liveAdminControls').classList.toggle('hidden', !isAdmin);
+  document.getElementById('adminAnnouncementForm')?.classList.toggle('hidden', !isAdmin);
+  document.getElementById('navDashboard')?.classList.toggle('hidden', !isSuperAdmin);
+  document.getElementById('adminPanel')?.classList.toggle('hidden', !isAdmin);
+
+  // Mettre à jour les stats globales
+  const users = getAppUsers();
+  document.getElementById('statMembers').textContent = users.length;
+
+  const activePage = document.querySelector('.page.active')?.id.replace('page-', '');
+  if (activePage === 'gallery') loadGalleryFromStorage();
+  if (activePage === 'chat') loadChatMessages();
+  if (activePage === 'sermons') loadSermonsFromDB();
+  if (activePage === 'home') loadAnnouncements();
+  checkLiveStatus();
+}
