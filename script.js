@@ -714,40 +714,290 @@ function updateUIByRole() {
 }
 
 // =============================================
-// LIVE
+// 🎥 LIVE — logique complète corrigée
 // =============================================
+
+// --- État caméra ---
+let _liveStream = null;          // stream caméra actif
+let _cameraFacing = 'user';      // 'user' | 'environment'
+let _liveMode = 'camera';        // 'camera' | 'youtube'
+let _recordingInterval = null;   // timer enregistrement
+let _recordingSeconds = 0;
+
+// Afficher / cacher les champs selon le mode choisi
+function toggleLiveMode() {
+  _liveMode = document.getElementById('liveModeSelect').value;
+  document.getElementById('liveYtUrlGroup').classList.toggle('hidden', _liveMode !== 'youtube');
+}
+
+// --- Activer la caméra (mobile + desktop) ---
+async function liveActivateCamera() {
+  try {
+    // Sur mobile : on essaie d'abord facingMode exact, sinon on laisse le navigateur choisir
+    const constraints = {
+      video: {
+        facingMode: { ideal: _cameraFacing },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: true
+    };
+    _liveStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const vid = document.getElementById('livePreview');
+    const adminVid = document.getElementById('adminLiveVideo');
+    vid.srcObject = _liveStream;
+    if (adminVid) adminVid.srcObject = _liveStream;
+    vid.style.display = 'block';
+    document.getElementById('cameraPlaceholder').style.display = 'none';
+    document.getElementById('cameraStatusBadge').textContent = '🟢 Actif';
+    document.getElementById('cameraStatusBadge').style.color = 'var(--success)';
+    document.getElementById('btnActivateCam').classList.add('hidden');
+    document.getElementById('btnSwitchCam').classList.remove('hidden');
+    document.getElementById('btnStopCam').classList.remove('hidden');
+  } catch(e) {
+    console.error('Camera error:', e);
+    const msg = e.name === 'NotAllowedError'
+      ? 'Permission caméra refusée. Autorisez l\'accès dans les paramètres du navigateur.'
+      : e.name === 'NotFoundError'
+      ? 'Aucune caméra trouvée sur cet appareil.'
+      : 'Caméra non disponible : ' + e.message;
+    showToast('❌', msg, 'error');
+  }
+}
+
+// --- Changer de caméra (avant / arrière) — mobile-safe ---
+async function liveSwitchCamera() {
+  _cameraFacing = _cameraFacing === 'user' ? 'environment' : 'user';
+  // Arrêter l'ancien stream proprement
+  if (_liveStream) {
+    _liveStream.getTracks().forEach(t => t.stop());
+    _liveStream = null;
+  }
+  // Réinitialiser l'affichage pour forcer le rechargement
+  const vid = document.getElementById('livePreview');
+  vid.srcObject = null;
+  vid.style.display = 'none';
+  document.getElementById('cameraPlaceholder').style.display = 'flex';
+  document.getElementById('btnActivateCam').classList.remove('hidden');
+  document.getElementById('btnSwitchCam').classList.add('hidden');
+  document.getElementById('btnStopCam').classList.add('hidden');
+  // Relancer avec la nouvelle caméra
+  await liveActivateCamera();
+  showToast('🔄', _cameraFacing === 'user' ? 'Caméra frontale' : 'Caméra arrière', 'info');
+}
+
+// --- Arrêter la caméra ---
+function liveStopCamera() {
+  if (_liveStream) {
+    _liveStream.getTracks().forEach(t => t.stop());
+    _liveStream = null;
+  }
+  const vid = document.getElementById('livePreview');
+  vid.srcObject = null;
+  vid.style.display = 'none';
+  document.getElementById('cameraPlaceholder').style.display = 'flex';
+  document.getElementById('cameraStatusBadge').textContent = 'Inactif';
+  document.getElementById('cameraStatusBadge').style.color = 'var(--text-muted)';
+  document.getElementById('btnActivateCam').classList.remove('hidden');
+  document.getElementById('btnSwitchCam').classList.add('hidden');
+  document.getElementById('btnStopCam').classList.add('hidden');
+}
+
+// --- Lancer le live ---
+function handleStartLive() {
+  const title = document.getElementById('liveTitleInput').value.trim();
+  if (!title) return showToast('⚠️', 'Veuillez saisir un titre pour le live', 'error');
+
+  const liveData = { active: true, title, mode: _liveMode, url: '', startedAt: new Date().toISOString() };
+
+  if (_liveMode === 'youtube') {
+    const url = document.getElementById('liveStreamUrl').value.trim();
+    if (!url) return showToast('⚠️', 'URL YouTube requise', 'error');
+    liveData.url = url;
+  } else {
+    // Mode caméra : vérifier que la caméra est active
+    if (!_liveStream) return showToast('⚠️', 'Activez d\'abord la caméra', 'error');
+    liveData.url = '';
+  }
+
+  localStorage.setItem(LIVE_KEY, JSON.stringify(liveData));
+  checkLiveStatus();
+  showToast('🔴', `Live démarré : ${title}`, 'success');
+  addNotif('🔴', `Live démarré : ${title}`);
+}
+
+// --- Arrêter le live ---
+function handleStopLive() {
+  if (!confirm('Arrêter le live en cours ?')) return;
+  // Arrêter l'enregistrement si en cours
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
+  clearInterval(_recordingInterval);
+  _recordingSeconds = 0;
+  localStorage.removeItem(LIVE_KEY);
+  // Cacher le panneau admin live
+  document.getElementById('liveActiveAdminPanel').classList.add('hidden');
+  document.getElementById('liveConfigCard').classList.remove('hidden');
+  checkLiveStatus();
+  showToast('⏹', 'Live arrêté', 'info');
+}
+
+// --- Vérifier le statut du live et mettre à jour l'UI ---
 function checkLiveStatus() {
   const live = JSON.parse(localStorage.getItem(LIVE_KEY) || 'null');
   const ind = document.getElementById('homeLiveIndicator');
+  const isAdmin = currentUser && (currentUser.role === 'superadmin' || currentUser.role === 'admin');
+
   if (live && live.active) {
+    // Indicateur accueil
     if (ind) ind.classList.remove('hidden');
+
+    // --- Vue admin : afficher le panneau de contrôle EN DIRECT ---
+    if (isAdmin) {
+      document.getElementById('liveConfigCard').classList.add('hidden');
+      const adminPanel = document.getElementById('liveActiveAdminPanel');
+      adminPanel.classList.remove('hidden');
+      document.getElementById('adminCurrentLiveTitle').textContent = live.title;
+
+      // Si mode caméra et stream actif : afficher la vidéo admin
+      if (live.mode !== 'youtube' && _liveStream) {
+        const adminVid = document.getElementById('adminLiveVideo');
+        if (adminVid && !adminVid.srcObject) adminVid.srcObject = _liveStream;
+        document.getElementById('adminLiveCameraView').classList.remove('hidden');
+        document.getElementById('recordingControls').classList.remove('hidden');
+      } else if (live.mode === 'youtube') {
+        document.getElementById('adminLiveCameraView').classList.add('hidden');
+        document.getElementById('recordingControls').classList.add('hidden');
+      }
+    }
+
+    // --- Vue spectateurs (section commune) ---
     document.getElementById('liveActive').classList.remove('hidden');
     document.getElementById('noLiveActive').classList.add('hidden');
     document.getElementById('currentLiveTitle').textContent = live.title;
+
+    // Remplir le player uniquement si la page live est active
     if (document.getElementById('page-live').classList.contains('active')) {
-      const playerContainer = document.getElementById('livePlayerContainer');
-      if (!playerContainer.hasChildNodes() || playerContainer.innerHTML === '') {
-        const yId = live.url.includes('v=') ? live.url.split('v=')[1].split('&')[0] : null;
-        playerContainer.innerHTML = yId
-          ? `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${yId}?autoplay=1" allowfullscreen></iframe>`
-          : `<a href="${live.url}" target="_blank" class="btn btn-gold">Rejoindre</a>`;
+      const pc = document.getElementById('livePlayerContainer');
+      // Ne pas écraser si déjà chargé
+      if (!pc.querySelector('iframe, video')) {
+        if (live.mode === 'youtube' && live.url) {
+          const yId = _extractYoutubeId(live.url);
+          if (yId) {
+            pc.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${yId}?autoplay=1" allowfullscreen style="border:none;border-radius:8px"></iframe>`;
+          } else {
+            pc.innerHTML = `<a href="${escapeHtml(live.url)}" target="_blank" class="btn btn-gold">▶️ Ouvrir le live</a>`;
+          }
+        } else if (live.mode !== 'youtube') {
+          // Mode caméra : l'admin voit son propre stream dans le panneau admin, pas ici
+          if (!isAdmin) {
+            pc.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:20px"><div style="font-size:40px;margin-bottom:8px">📡</div><p>Live en cours depuis l'église</p><p style="font-size:11px;margin-top:4px">L'animateur diffuse depuis sa caméra</p></div>`;
+          } else {
+            // Admin : ne pas afficher de player supplémentaire ici
+            pc.innerHTML = '';
+          }
+        }
       }
     }
+
   } else {
+    // Pas de live actif
     if (ind) ind.classList.add('hidden');
     document.getElementById('noLiveActive').classList.remove('hidden');
     document.getElementById('liveActive').classList.add('hidden');
     document.getElementById('livePlayerContainer').innerHTML = '';
+    // Remettre le panneau config visible pour admin
+    if (isAdmin) {
+      document.getElementById('liveConfigCard')?.classList.remove('hidden');
+      document.getElementById('liveActiveAdminPanel')?.classList.add('hidden');
+    }
   }
 }
 
-function handleStartLive() {
-  const title = document.getElementById('liveTitleInput').value;
-  const url = document.getElementById('liveStreamUrl').value;
-  localStorage.setItem(LIVE_KEY, JSON.stringify({ active: true, title, url }));
-  checkLiveStatus();
+function _extractYoutubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([^&?/]+)/);
+  return m ? m[1] : null;
 }
-function handleStopLive() { localStorage.removeItem(LIVE_KEY); checkLiveStatus(); }
+
+// --- Enregistrement ---
+function startRecording() {
+  if (!_liveStream) return showToast('⚠️', 'Aucun flux caméra actif', 'error');
+  recordedChunks = [];
+  // Choisir le meilleur format supporté
+  const mimeType = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4']
+    .find(t => MediaRecorder.isTypeSupported(t)) || '';
+  try {
+    mediaRecorder = new MediaRecorder(_liveStream, mimeType ? { mimeType } : {});
+  } catch(e) {
+    mediaRecorder = new MediaRecorder(_liveStream);
+  }
+  mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    document.getElementById('btnSaveRecord').classList.remove('hidden');
+    document.getElementById('recordingStatus').textContent = `✅ ${_formatDuration(_recordingSeconds)} enregistrés — prêt à sauvegarder`;
+    clearInterval(_recordingInterval);
+  };
+  mediaRecorder.start(1000); // chunk toutes les secondes
+
+  // Timer
+  _recordingSeconds = 0;
+  document.getElementById('recordingTimer').textContent = '00:00';
+  _recordingInterval = setInterval(() => {
+    _recordingSeconds++;
+    document.getElementById('recordingTimer').textContent = _formatDuration(_recordingSeconds);
+  }, 1000);
+
+  document.getElementById('btnRecord').classList.add('hidden');
+  document.getElementById('btnStopRecord').classList.remove('hidden');
+  document.getElementById('btnSaveRecord').classList.add('hidden');
+  document.getElementById('recordingStatus').textContent = '⏺ Enregistrement en cours...';
+  showToast('⏺', 'Enregistrement démarré', 'info');
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  clearInterval(_recordingInterval);
+  document.getElementById('btnRecord').classList.remove('hidden');
+  document.getElementById('btnStopRecord').classList.add('hidden');
+  showToast('⏹', 'Enregistrement arrêté', 'info');
+}
+
+async function saveRecording() {
+  if (!recordedChunks.length) return showToast('⚠️', 'Aucun enregistrement à sauvegarder', 'error');
+  const live = JSON.parse(localStorage.getItem(LIVE_KEY) || 'null');
+  const title = live?.title || `Live du ${new Date().toLocaleDateString()}`;
+  const blob = new Blob(recordedChunks, { type: recordedChunks[0]?.type || 'video/webm' });
+  const id = 'v_' + Date.now();
+
+  document.getElementById('recordingStatus').textContent = '💾 Sauvegarde en cours...';
+  try {
+    await dbPut('sermons', { id, title, date: new Date().toISOString() });
+    await dbPut('videos', { id, blob });
+    recordedChunks = [];
+    document.getElementById('btnSaveRecord').classList.add('hidden');
+    document.getElementById('recordingStatus').textContent = '✅ Sauvegardé dans les Prédications !';
+    showToast('✅', 'Prédication sauvegardée !', 'success');
+    // Recharger les sermons si la page est déjà visitée
+    loadedPages.delete('sermons');
+  } catch(e) {
+    document.getElementById('recordingStatus').textContent = '❌ Erreur de sauvegarde';
+    showToast('❌', 'Erreur lors de la sauvegarde', 'error');
+  }
+}
+
+function _formatDuration(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+// Compatibilité : anciennes fonctions caméra remplacées
+function startPreview() { liveActivateCamera(); }
+function toggleCamera() { liveSwitchCamera(); }
 
 // =============================================
 // POLLING — réduit et optimisé
@@ -1052,22 +1302,7 @@ function speakBible() {
 function pauseSpeech() { window.speechSynthesis.pause(); }
 function stopSpeech() { window.speechSynthesis.cancel(); }
 
-function startPreview() {
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCameraFacing }, audio: false })
-    .then(stream => {
-      cameraStream = stream;
-      const vid = document.getElementById('livePreview');
-      if (vid) { vid.srcObject = stream; }
-    }).catch(e => showToast('❌', 'Caméra non disponible', 'error'));
-}
-
-function toggleCamera() {
-  currentCameraFacing = currentCameraFacing === 'user' ? 'environment' : 'user';
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(t => t.stop());
-    startPreview();
-  }
-}
+// startPreview et toggleCamera sont définis dans la section LIVE ci-dessus
 
 function previewChatMedia(event) {
   const file = event.target.files[0];

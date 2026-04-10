@@ -303,35 +303,91 @@
 <!-- LIVE -->
 <div class="page" id="page-live">
   <div class="section-header"><h2>🎥 <span data-i18n="liveTitle">Live – Philadelphie</span></h2></div>
+
+  <!-- ===== VUE ADMIN : panneau de contrôle complet ===== -->
   <div id="liveAdminControls" class="hidden">
+
+    <!-- Caméra locale -->
     <div class="glass-card">
-      <h3 style="margin-bottom:8px">Démarrer un live</h3>
-      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Seuls les admins peuvent lancer un live.</p>
-      <div class="camera-container" style="margin-bottom:12px">
-        <video id="livePreview" autoplay playsinline muted class="live-preview-video"></video>
-        <div class="live-preview-controls">
-          <button class="btn btn-secondary btn-sm" onclick="toggleCamera()">🔄 Changer caméra</button>
-          <button class="btn btn-secondary btn-sm" onclick="startPreview()">📷 Aperçu</button>
+      <div class="card-header">
+        <div class="card-title">📷 Caméra locale</div>
+        <span id="cameraStatusBadge" style="font-size:11px;color:var(--text-muted)">Inactif</span>
+      </div>
+      <div class="camera-container" id="cameraContainer" style="background:#000;border-radius:12px;overflow:hidden;min-height:180px;display:flex;align-items:center;justify-content:center">
+        <video id="livePreview" autoplay playsinline muted style="width:100%;display:none;border-radius:12px"></video>
+        <div id="cameraPlaceholder" style="text-align:center;color:var(--text-muted);padding:20px">
+          <div style="font-size:40px;margin-bottom:8px">📷</div>
+          <p style="font-size:12px">Appuyez sur "Activer caméra"</p>
         </div>
       </div>
-      <div class="form-group"><label class="form-label">Titre du live</label><input class="form-input" type="text" id="liveTitleInput" placeholder="Ex: Culte d'Adoration"></div>
-      <div class="form-group"><label class="form-label">Lien YouTube / flux</label><input class="form-input" type="text" id="liveStreamUrl" placeholder="https://youtube.com/watch?v=..."></div>
-      <button class="btn btn-danger btn-block" onclick="handleStartLive()">🔴 Démarrer le live</button>
+      <!-- Contrôles caméra -->
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-gold btn-sm" onclick="liveActivateCamera()" id="btnActivateCam">📷 Activer caméra</button>
+        <button class="btn btn-secondary btn-sm hidden" onclick="liveSwitchCamera()" id="btnSwitchCam">🔄 Retourner</button>
+        <button class="btn btn-secondary btn-sm hidden" onclick="liveStopCamera()" id="btnStopCam">⏹ Arrêter caméra</button>
+      </div>
+    </div>
+
+    <!-- Configuration du live -->
+    <div class="glass-card" id="liveConfigCard">
+      <div class="card-title" style="margin-bottom:12px">⚙️ Configuration du live</div>
+      <div class="form-group">
+        <label class="form-label">Mode de diffusion</label>
+        <select class="form-select" id="liveModeSelect" onchange="toggleLiveMode()">
+          <option value="camera">📷 Caméra locale (enregistrement)</option>
+          <option value="youtube">▶️ Lien YouTube Live</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Titre du live</label><input class="form-input" type="text" id="liveTitleInput" placeholder="Ex: Culte d'Adoration du Dimanche"></div>
+      <div id="liveYtUrlGroup" class="form-group hidden">
+        <label class="form-label">URL YouTube Live</label>
+        <input class="form-input" type="text" id="liveStreamUrl" placeholder="https://youtube.com/watch?v=...">
+      </div>
+      <button class="btn btn-danger btn-block" onclick="handleStartLive()" id="btnStartLive">🔴 Lancer le live</button>
+    </div>
+
+    <!-- Panneau EN DIRECT (admin) -->
+    <div class="glass-card hidden" id="liveActiveAdminPanel" style="border-color:var(--danger)">
+      <div class="card-header">
+        <div>
+          <div class="live-badge">🔴 EN DIRECT</div>
+          <h3 id="adminCurrentLiveTitle" style="margin-top:6px;color:var(--gold)"></h3>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="handleStopLive()">⏹ Arrêter</button>
+      </div>
+      <!-- Vue caméra admin en direct -->
+      <div id="adminLiveCameraView" class="hidden" style="margin-bottom:12px">
+        <video id="adminLiveVideo" autoplay playsinline muted style="width:100%;border-radius:8px;background:#000"></video>
+      </div>
+      <!-- Enregistrement -->
+      <div id="recordingControls" class="hidden" style="background:rgba(244,67,54,.08);border-radius:8px;padding:12px;border:1px solid rgba(244,67,54,.2)">
+        <div class="card-header" style="margin-bottom:8px">
+          <span style="font-size:13px;font-weight:700">⏺ Enregistrement</span>
+          <span id="recordingTimer" style="font-size:12px;color:var(--danger);font-weight:700">00:00</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-danger btn-sm" onclick="startRecording()" id="btnRecord" style="flex:1">⏺ Enregistrer</button>
+          <button class="btn btn-secondary btn-sm hidden" onclick="stopRecording()" id="btnStopRecord" style="flex:1">⏹ Arrêter</button>
+          <button class="btn btn-success btn-sm hidden" onclick="saveRecording()" id="btnSaveRecord" style="flex:1">💾 Sauvegarder</button>
+        </div>
+        <p id="recordingStatus" style="font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center"></p>
+      </div>
     </div>
   </div>
+
+  <!-- ===== VUE SPECTATEUR : ce que voient les membres ===== -->
   <div id="liveStatusArea">
     <div id="noLiveActive" class="empty-state">
       <div class="empty-icon">🎥</div>
       <p>Aucun live en cours pour le moment.</p>
-      <p style="font-size:12px;margin-top:4px">Les membres seront notifiés dès qu'un administrateur lancera un direct.</p>
+      <p style="font-size:12px;margin-top:4px">Vous serez notifié dès qu'un live commencera.</p>
     </div>
     <div id="liveActive" class="hidden">
       <div class="glass-card">
         <div class="card-header">
           <div><div class="live-badge">🔴 EN DIRECT</div><h3 id="currentLiveTitle" style="margin-top:6px"></h3></div>
-          <button id="stopLiveBtn" class="btn btn-danger btn-sm hidden" onclick="handleStopLive()">Arrêter</button>
         </div>
-        <div class="live-player-container" id="livePlayerContainer"></div>
+        <div class="live-player-container" id="livePlayerContainer" style="min-height:200px;background:#000;border-radius:8px;display:flex;align-items:center;justify-content:center"></div>
       </div>
     </div>
   </div>
