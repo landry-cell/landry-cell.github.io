@@ -196,6 +196,10 @@ async function navigate(p) {
       case 'chat': loadChatMessages(); break;
     }
   }
+  // Toujours rafraîchir le live quand on navigue vers cette page
+  if (p === 'live') {
+    setTimeout(() => checkLiveStatus(), 50);
+  }
 }
 
 function startQuickMed() { navigate('meditation'); setDur(3, null); setTimeout(() => startMed(), 300); }
@@ -877,28 +881,9 @@ function checkLiveStatus() {
     document.getElementById('noLiveActive').classList.add('hidden');
     document.getElementById('currentLiveTitle').textContent = live.title;
 
-    // Remplir le player uniquement si la page live est active
+    // Remplir le player — toujours reconstruire quand la page live est active
     if (document.getElementById('page-live').classList.contains('active')) {
-      const pc = document.getElementById('livePlayerContainer');
-      // Ne pas écraser si déjà chargé
-      if (!pc.querySelector('iframe, video')) {
-        if (live.mode === 'youtube' && live.url) {
-          const yId = _extractYoutubeId(live.url);
-          if (yId) {
-            pc.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${yId}?autoplay=1" allowfullscreen style="border:none;border-radius:8px"></iframe>`;
-          } else {
-            pc.innerHTML = `<a href="${escapeHtml(live.url)}" target="_blank" class="btn btn-gold">▶️ Ouvrir le live</a>`;
-          }
-        } else if (live.mode !== 'youtube') {
-          // Mode caméra : l'admin voit son propre stream dans le panneau admin, pas ici
-          if (!isAdmin) {
-            pc.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:20px"><div style="font-size:40px;margin-bottom:8px">📡</div><p>Live en cours depuis l'église</p><p style="font-size:11px;margin-top:4px">L'animateur diffuse depuis sa caméra</p></div>`;
-          } else {
-            // Admin : ne pas afficher de player supplémentaire ici
-            pc.innerHTML = '';
-          }
-        }
-      }
+      _buildLivePlayer(live, isAdmin);
     }
 
   } else {
@@ -911,6 +896,30 @@ function checkLiveStatus() {
     if (isAdmin) {
       document.getElementById('liveConfigCard')?.classList.remove('hidden');
       document.getElementById('liveActiveAdminPanel')?.classList.add('hidden');
+    }
+  }
+}
+
+// Construire le player spectateur — appelé à chaque checkLiveStatus si page active
+function _buildLivePlayer(live, isAdmin) {
+  const pc = document.getElementById('livePlayerContainer');
+  if (!pc) return;
+  if (live.mode === 'youtube' && live.url) {
+    const yId = _extractYoutubeId(live.url);
+    if (yId) {
+      // Eviter de recréer l'iframe si déjà le bon
+      if (!pc.querySelector('iframe[src*="' + yId + '"]')) {
+        pc.innerHTML = '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/' + yId + '?autoplay=1&rel=0" allowfullscreen allow="autoplay; fullscreen" style="border:none;border-radius:8px;width:100%;aspect-ratio:16/9"></iframe>';
+      }
+    } else {
+      pc.innerHTML = '<div style="text-align:center;padding:20px"><a href="' + escapeHtml(live.url) + '" target="_blank" class="btn btn-gold" style="margin-top:10px">▶️ Ouvrir le live</a></div>';
+    }
+  } else {
+    // Mode caméra
+    if (!isAdmin) {
+      pc.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:30px"><div style="font-size:50px;margin-bottom:12px">📡</div><p style="font-size:14px;font-weight:700">Live en cours depuis l'église</p><p style="font-size:12px;margin-top:6px;color:var(--text-muted)">L'animateur diffuse depuis sa caméra</p></div>';
+    } else {
+      pc.innerHTML = '';
     }
   }
 }
