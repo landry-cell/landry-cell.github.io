@@ -1,77 +1,106 @@
-// Service Worker optimisé — stratégie Cache First pour assets statiques
-const CACHE_NAME = 'philadelphie-v2';
-const STATIC_ASSETS = [
+// ====================================
+// SERVICE WORKER — Temple Philadelphie
+// Version optimisée pour Netlify
+// ====================================
+const CACHE_NAME = 'philadelphie-v3';
+
+const CRITICAL_ASSETS = [
   './',
   './index.html',
   './style.css',
   './script.js',
   './data.js',
-  './manifest.json',
-  './logo-site.png',
+  './manifest.json'
 ];
-// Image de fond séparée — mise en cache mais non bloquante
-const HEAVY_ASSETS = [
+
+const LAZY_ASSETS = [
+  './logo-site.png',
   './IMG_20251230_143301.jpg',
   'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js'
 ];
 
-// Installation : cache les assets critiques en priorité
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      // Assets critiques en premier (bloquants)
-      await cache.addAll(STATIC_ASSETS);
-      // Assets lourds en background (non-bloquant)
-      cache.addAll(HEAVY_ASSETS).catch(() => {});
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async cache => {
+      await cache.addAll(CRITICAL_ASSETS);
+      Promise.allSettled(LAZY_ASSETS.map(url =>
+        cache.add(url).catch(() => {})
+      ));
     })
   );
-  // Activer immédiatement sans attendre l'ancien SW
   self.skipWaiting();
 });
 
-// Activation : nettoyer les anciens caches
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
+self.addEventListener('activate', event => {
+  event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
 
-// Fetch : Cache First pour assets statiques, Network First pour API
-self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url);
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET') return;
 
-  // API Bible — Network First (données dynamiques)
+  // API Bible : Network First
   if (url.hostname === 'bible-api.com') {
-    e.respondWith(
-      fetch(e.request).then(res => {
-        // Mettre en cache la réponse API pour usage hors ligne
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-        return res;
-      }).catch(() => caches.match(e.request))
-    );
+    event.respondWith(networkFirst(event.request));
     return;
   }
 
-  // Assets statiques — Cache First
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        // Mettre en cache seulement les requêtes GET valides
-        if (e.request.method === 'GET' && res.status === 200) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-        }
-        return res;
-      });
-    }).catch(() => {
-      // Fallback hors ligne pour les pages HTML
-      if (e.request.destination === 'document') {
-        return caches.match('./index.html');
-      }
-    })
-  );
+  // index.html et sw.js : Network First (toujours à jour)
+  if (url.pathname === '/' || url.pathname.endsWith('index.html') || url.pathname.endsWith('sw.js')) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
+
+  // JS, CSS, images : Stale While Revalidate
+  if (/\.(js|css|png|jpg|jpeg|webp|woff2?)$/.test(url.pathname)) {
+    event.respondWith(staleWhileRevalidate(event.request));
+    return;
+  }
+
+  // Reste : Cache First
+  event.respondWith(cacheFirst(event.request));
 });
+
+async function networkFirst(request) {
+  try {
+    const res = await fetch(request);
+    if (res.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, res.clone());
+    }
+    return res;
+  } catch {
+    const cached = await caches.match(request);
+    return cached || (request.destination === 'document'
+      ? caches.match('./index.html')
+      : new Response('Hors ligne', { status: 503 }));
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const res = await fetch(request);
+    if (res.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, res.clone());
+    }
+    return res;
+  } catch {
+    return new Response('Non disponible', { status: 503 });
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cached = await caches.match(request);
+  const fetchPromise = fetch(request).then(res => {
+    if (res.ok) caches.open(CACHE_NAME).then(c => c.put(request, res.clone()));
+    return res;
+  }).catch(() => null);
+  return cached || fetchPromise;
+}
