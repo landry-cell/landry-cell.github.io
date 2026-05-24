@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2heures17 | Administration</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="stars" id="stars-container"></div>
+    
+    <div class="container">
+        <nav>
+            <div class="logo">2heures17 Admin</div>
+            <div class="nav-links">
+                <a href="dashboard.html">Mon Espace</a>
+                <a href="#" onclick="logout()">Déconnexion</a>
+            </div>
+        </nav>
+
+        <div class="glass" style="margin-bottom: var(--spacing-xl);">
+            <h3>Tableau de bord Admin</h3>
+            <div style="display: flex; gap: var(--spacing-xl); margin-top: var(--spacing-md);" id="admin-stats">
+                <!-- Stats loaded via JS -->
+            </div>
+        </div>
+
+        <div class="glass" style="margin-bottom: var(--spacing-xl);">
+            <h3>Ajouter un utilisateur</h3>
+            <div id="admin-status-msg" style="display: none; margin-top: var(--spacing-md);"></div>
+            <form id="add-user-form" style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md); align-items: flex-end;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Pseudo</label>
+                    <input type="text" id="new-pseudo" required placeholder="Pseudo">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Email</label>
+                    <input type="email" id="new-email" required placeholder="email@exemple.com">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>Mot de passe</label>
+                    <input type="password" id="new-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary">Ajouter</button>
+            </form>
+        </div>
+
+        <div class="glass">
+            <h3>Gestion des Utilisateurs</h3>
+            <table id="users-table">
+                <thead>
+                    <tr>
+                        <th>Pseudo</th>
+                        <th>Email</th>
+                        <th>Rôle actuel</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Users loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="glass" style="margin-top: var(--spacing-xl);">
+            <h3>Alertes récentes</h3>
+            <table id="alerts-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Utilisateur</th>
+                        <th>Sévérité</th>
+                        <th>Message</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Alerts loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="glass" style="margin-top: var(--spacing-xl);">
+            <h3>Évaluations des services</h3>
+            <table id="ratings-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Utilisateur</th>
+                        <th>Bénévole</th>
+                        <th>Note</th>
+                        <th>Commentaire</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Ratings loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;"></div>
+    <div id="confirm-modal" class="glass modal" style="display: none;">
+        <h3 id="modal-title">Confirmation</h3>
+        <p id="modal-message" style="margin: var(--spacing-lg) 0; color: var(--text-muted);"></p>
+        <div style="display: flex; gap: var(--spacing-md); justify-content: flex-end;">
+            <button id="modal-cancel" class="btn btn-outline">Annuler</button>
+            <button id="modal-confirm" class="btn btn-danger">Supprimer</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'auth.html';
+        }
+
+        async function loadAdminData() {
+            try {
+                // Load Stats
+                const statsR = await fetch('/api/admin/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (statsR.ok) {
+                    const stats = await statsR.json();
+                    document.getElementById('admin-stats').innerHTML = `
+                        <div class="glass" style="padding: 1rem; flex: 1;"><h4>Utilisateurs</h4><p>${stats.total_users}</p></div>
+                        <div class="glass" style="padding: 1rem; flex: 1;"><h4>Alertes</h4><p>${stats.total_alerts}</p></div>
+                        <div class="glass" style="padding: 1rem; flex: 1;"><h4>Sessions Actives</h4><p>${stats.active_sessions}</p></div>
+                    `;
+                }
+
+                // Load Alerts
+                const alertsR = await fetch('/api/admin/alerts', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (alertsR.ok) {
+                    const alerts = await alertsR.json();
+                    const tbody = document.querySelector('#alerts-table tbody');
+                    let html = '';
+                    alerts.forEach(alert => {
+                        html += `
+                            <tr>
+                                <td>${new Date(alert.created_at).toLocaleString()}</td>
+                                <td>User ID: ${alert.user_id}</td>
+                                <td class="severity-${alert.severity}">${alert.severity === 3 ? 'URGENCE' : 'Modéré'}</td>
+                                <td>${alert.message}</td>
+                                <td>
+                                    <button onclick="event.preventDefault(); deleteAlert(${alert.id})" class="btn btn-outline" style="border-color: var(--danger-color); color: var(--danger-color); padding: 0.2rem 0.5rem;">Supprimer</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                }
+
+                // Load Ratings
+                const ratingsR = await fetch('/api/admin/ratings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (ratingsR.ok) {
+                    const ratings = await ratingsR.json();
+                    const tbody = document.querySelector('#ratings-table tbody');
+                    let html = '';
+                    ratings.forEach(rating => {
+                        html += `
+                            <tr>
+                                <td>${new Date(rating.created_at).toLocaleString()}</td>
+                                <td>${rating.user_pseudo}</td>
+                                <td>${rating.volunteer_pseudo}</td>
+                                <td style="color: var(--warning-color);">${'★'.repeat(rating.score)}${'☆'.repeat(5-rating.score)}</td>
+                                <td>${rating.comment || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                }
+
+                // Load Users
+                const usersR = await fetch('/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (usersR.ok) {
+                    const users = await usersR.json();
+                    const tbody = document.querySelector('#users-table tbody');
+                    let html = '';
+                    users.forEach(user => {
+                        html += `
+                            <tr>
+                                <td>${user.pseudo}</td>
+                                <td>${user.email}</td>
+                                <td><span class="badge">${user.role}</span></td>
+                                <td>
+                                    <select onchange="updateRole(${user.id}, this.value)" style="margin-right: 0.5rem;">
+                                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>Utilisateur</option>
+                                        <option value="volunteer" ${user.role === 'volunteer' ? 'selected' : ''}>Collaborateur</option>
+                                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                    </select>
+                                    <button onclick="event.preventDefault(); deleteUser(${user.id}, '${user.pseudo}')" class="btn btn-outline" style="border-color: var(--danger-color); color: var(--danger-color); padding: 0.2rem 0.5rem;">Supprimer</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                }
+            } catch (err) {
+                console.error(err);
+                showStatus("Erreur lors du chargement des données admin. Vérifiez vos droits.", "danger");
+            }
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('admin-status-msg');
+            el.innerText = msg;
+            el.className = `alert alert-${type}`;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
+
+        async function updateRole(userId, newRole) {
+            const r = await fetch(`/api/admin/users/${userId}/role`, {
+                method: 'PATCH',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ role: newRole })
+            });
+            const data = await r.json();
+            if (r.ok) {
+                showStatus(data.message || "Rôle mis à jour avec succès.", "success");
+                loadAdminData();
+            } else {
+                showStatus(data.detail || "Erreur lors de la mise à jour du rôle.", "danger");
+            }
+        }
+
+        async function deleteUser(userId, pseudo) {
+            askConfirmation(
+                "Supprimer l'utilisateur",
+                `Es-tu sûr de vouloir supprimer l'utilisateur "${pseudo}" ? Cette action est irréversible.`,
+                async () => {
+                    const r = await fetch(`/api/admin/users/${userId}`, {
+                        method: 'DELETE',
+                        headers: { 
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await r.json();
+                    if (r.ok) {
+                        showToast(data.message || `Utilisateur ${pseudo} supprimé.`, "success");
+                        loadAdminData();
+                    } else {
+                        showToast(data.detail || "Erreur lors de la suppression.", "danger");
+                    }
+                }
+            );
+        }
+
+        async function deleteAlert(alertId) {
+            askConfirmation(
+                "Supprimer l'alerte",
+                "Es-tu sûr de vouloir supprimer cette alerte de sécurité ?",
+                async () => {
+                    const r = await fetch(`/api/admin/alerts/${alertId}`, {
+                        method: 'DELETE',
+                        headers: { 
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await r.json();
+                    if (r.ok) {
+                        showToast(data.message || "Alerte supprimée.", "success");
+                        loadAdminData();
+                    } else {
+                        showToast(data.detail || "Erreur lors de la suppression de l'alerte.", "danger");
+                    }
+                }
+            );
+        }
+
+        // Custom Confirmation Logic
+        function askConfirmation(title, message, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            const overlay = document.getElementById('modal-overlay');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const confirmBtn = document.getElementById('modal-confirm');
+            const cancelBtn = document.getElementById('modal-cancel');
+
+            titleEl.innerText = title;
+            messageEl.innerText = message;
+            
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+
+            confirmBtn.onclick = async () => {
+                modal.style.display = 'none';
+                overlay.style.display = 'none';
+                await onConfirm();
+            };
+
+            cancelBtn.onclick = () => {
+                modal.style.display = 'none';
+                overlay.style.display = 'none';
+            };
+        }
+
+        document.getElementById('add-user-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const pseudo = document.getElementById('new-pseudo').value;
+            const email = document.getElementById('new-email').value;
+            const password = document.getElementById('new-password').value;
+
+            const r = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ pseudo, email, password })
+            });
+
+            const data = await r.json();
+            if (r.ok) {
+                showStatus("Utilisateur ajouté avec succès.", "success");
+                document.getElementById('add-user-form').reset();
+                loadAdminData();
+            } else {
+                showStatus(data.detail || "Erreur lors de l'ajout de l'utilisateur.", "danger");
+            }
+        };
+
+        if (token) loadAdminData();
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

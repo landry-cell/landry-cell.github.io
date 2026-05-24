@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2heures17 | Mon Espace</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .mood-btn { padding: 1rem; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass-bg); cursor: pointer; font-size: 1.5rem; transition: var(--transition); }
+        .mood-btn:hover { background: var(--accent-color); transform: scale(1.1); }
+        .mood-btn.active { background: var(--accent-color); border-color: white; }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars-container"></div>
+    
+    <div class="container">
+        <nav>
+            <div class="logo">2heures17</div>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="chat.html">Chat</a>
+                <a href="#" onclick="logout()">Déconnexion</a>
+            </div>
+        </nav>
+
+        <header style="margin: var(--spacing-xl) 0; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 id="welcome-msg">Bonjour</h1>
+                <p style="color: var(--text-muted);">Comment te sens-tu aujourd'hui ?</p>
+            </div>
+            <div id="admin-link-container" style="display: none;">
+                <a href="admin.html" class="btn btn-outline" style="border-color: var(--accent-color); color: var(--accent-color);">⚙️ Panneau Admin</a>
+            </div>
+        </header>
+
+        <div class="grid-2-1">
+            <div class="glass">
+                <h3>Journal émotionnel</h3>
+                <div style="display: flex; justify-content: space-between; margin: var(--spacing-lg) 0;">
+                    <button class="mood-btn" onclick="selectMood(1)" title="Très mal">😢</button>
+                    <button class="mood-btn" onclick="selectMood(2)" title="Pas bien">😟</button>
+                    <button class="mood-btn" onclick="selectMood(3)" title="Neutre">😐</button>
+                    <button class="mood-btn" onclick="selectMood(4)" title="Bien">🙂</button>
+                    <button class="mood-btn" onclick="selectMood(5)" title="Très bien">✨</button>
+                </div>
+                <div class="form-group">
+                    <textarea id="mood-note" placeholder="Comment se passe ta nuit ? (optionnel)" rows="4"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveMood()">Enregistrer mon humeur</button>
+            </div>
+
+            <div class="glass">
+                <h3>Exercices anti-stress</h3>
+                <ul style="list-style: none; margin-top: var(--spacing-md);">
+                    <li style="margin-bottom: var(--spacing-md);">
+                        <a href="#" class="btn btn-outline" style="width: 100%; text-align: left;">🌬️ Respiration guidée (4-7-8)</a>
+                    </li>
+                    <li style="margin-bottom: var(--spacing-md);">
+                        <a href="#" class="btn btn-outline" style="width: 100%; text-align: left;">🎧 Méditation calme</a>
+                    </li>
+                    <li style="margin-bottom: var(--spacing-md);">
+                        <a href="#" class="btn btn-outline" style="width: 100%; text-align: left;">📝 Écriture intuitive</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-sos" onclick="triggerSOS()">SOS D'URGENCE</button>
+
+    <script src="js/app.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'auth.html';
+
+        let selectedMoodScore = 0;
+
+        async function initDashboard() {
+            const user = await getCurrentUser();
+            if (user) {
+                document.getElementById('welcome-msg').innerText = `Bonjour, ${user.pseudo}`;
+                
+                // Show admin link if user is admin or superadmin
+                if (user.role === 'admin' || user.role === 'superadmin') {
+                    document.getElementById('admin-link-container').style.display = 'block';
+                }
+            } else {
+                logout();
+            }
+        }
+
+        initDashboard();
+
+        function selectMood(score) {
+            selectedMoodScore = score;
+            document.querySelectorAll('.mood-btn').forEach((b, i) => {
+                b.classList.toggle('active', i + 1 === score);
+            });
+        }
+
+        async function saveMood() {
+            if (selectedMoodScore === 0) {
+                if (typeof showToast === 'function') showToast("Sélectionne une humeur d'abord.", "danger");
+                return;
+            }
+            const btn = document.querySelector('.btn-primary');
+            btn.classList.add('loading');
+
+            const note = document.getElementById('mood-note').value;
+            try {
+                const r = await fetch('/api/mood', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ mood_score: selectedMoodScore, note })
+                });
+                if (r.ok) {
+                    if (typeof showToast === 'function') showToast("Humeur enregistrée. Prends soin de toi.", "success");
+                    document.getElementById('mood-note').value = '';
+                    selectMood(0);
+                }
+            } catch (err) {
+                if (typeof showToast === 'function') showToast("Erreur lors de l'enregistrement", "danger");
+            } finally {
+                btn.classList.remove('loading');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+
+        function triggerSOS() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            
+            fetch('/api/sos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    type: 'emergency',
+                    severity: 3,
+                    message: 'Bouton SOS cliqué depuis le dashboard'
+                })
+            }).then(r => r.json()).then(data => {
+                if (typeof showToast === 'function') showToast("🆘 Alerte envoyée ! Redirection vers le chat...", "danger");
+                setTimeout(() => { window.location.href = "chat.html"; }, 1500);
+            });
+        }
+    </script>
+</body>
+</html>

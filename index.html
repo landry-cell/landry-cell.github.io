@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2heures17 | Personne n'est seul dans la nuit</title>
+    <meta name="description" content="Une plateforme de soutien nocturne bienveillante. Discutez avec des bénévoles ou notre IA quand le silence devient trop lourd.">
+    
+    <!-- OpenGraph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://2heures17.vercel.app/">
+    <meta property="og:title" content="2heures17 | Soutien Nocturne">
+    <meta property="og:description" content="Personne n'est seul dans la nuit. Rejoignez notre communauté de soutien bienveillante.">
+    <meta property="og:image" content="https://2heures17.vercel.app/img/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://2heures17.vercel.app/">
+    <meta property="twitter:title" content="2heures17 | Soutien Nocturne">
+    <meta property="twitter:description" content="Personne n'est seul dans la nuit. Rejoignez notre communauté de soutien bienveillante.">
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="stars" id="stars-container"></div>
+    
+    <div class="container">
+        <nav>
+            <div class="logo">2heures17</div>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="admin.html" id="admin-nav-link" class="btn btn-outline" style="display:none; padding: var(--spacing-sm) var(--spacing-md); margin-left: var(--spacing-md); border-color: var(--accent-color); color: var(--accent-color);">⚙️ Admin <span id="unread-count" class="notification-badge">0</span></a>
+                <a href="auth.html" id="auth-link" class="btn btn-outline" style="padding: var(--spacing-sm) var(--spacing-md); margin-left: var(--spacing-md);">Se connecter / S'inscrire</a>
+                <a href="dashboard.html" id="dashboard-link" class="btn btn-primary" style="display:none; padding: var(--spacing-sm) var(--spacing-md); margin-left: var(--spacing-md);">Mon Espace</a>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <h1>Il est 2h17 du matin.<br>Tu n'es pas seul.</h1>
+            <p>Un espace bienveillant pour les jeunes en quête de soutien, d'écoute et de calme dans la nuit.</p>
+            <div class="hero-btns" id="guest-btns">
+                <a href="auth.html" class="btn btn-primary">Créer un compte</a>
+                <a href="auth.html" class="btn btn-outline">Se connecter</a>
+            </div>
+            <div class="hero-btns" id="user-btns" style="display:none;">
+                <a href="chat.html" class="btn btn-primary">Parler maintenant</a>
+                <a href="dashboard.html" class="btn btn-outline">Accéder à mon espace</a>
+            </div>
+        </section>
+
+        <div class="glass" style="margin-top: var(--spacing-xl); text-align: center;">
+            <h2>Besoin de calme ?</h2>
+            <p>Prends un instant pour respirer avec nous.</p>
+            <div class="breathe-container">
+                <div class="breathe-circle" id="breathe-text">Inspire...</div>
+            </div>
+        </div>
+
+        <footer class="footer-resources">
+            <div class="glass">
+                <h4>🌙 À propos de 2heures17</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: var(--spacing-md);">
+                    Une initiative bénévole pour que personne ne se sente seul dans le silence de la nuit.
+                </p>
+                <p style="color: var(--danger-color); font-size: 0.75rem; margin-top: var(--spacing-md); font-style: italic;">
+                    ⚠️ Attention : Ce site est un espace de soutien et d'écoute. En cas d'urgence vitale, contactez immédiatement les secours (15 ou 112). Notre IA et nos bénévoles ne remplacent pas un avis médical professionnel.
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <button class="btn btn-sos" onclick="triggerSOS()">SOS D'URGENCE</button>
+
+    <script>
+        // Animation du texte de respiration
+        const breatheText = document.getElementById('breathe-text');
+        setInterval(() => {
+            if (breatheText.innerText === 'Inspire...') {
+                setTimeout(() => { breatheText.innerText = 'Retiens...'; }, 3200);
+                setTimeout(() => { breatheText.innerText = 'Expire...'; }, 4800);
+            } else {
+                breatheText.innerText = 'Inspire...';
+            }
+        }, 8000);
+    </script>
+    <script src="js/app.js"></script>
+</body>
+</html>
